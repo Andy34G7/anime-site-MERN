@@ -24,6 +24,7 @@ const anime = [
       { number: 1, title: 'Enter Naruto Uzumaki!', lengthMin: 23 },
       { number: 2, title: 'My Name is Konohamaru!', lengthMin: 23 }
     ],
+    score: 8.6,
     coverImage: '/images/naruto.jpg',
     createdAt: now()
   },
@@ -37,6 +38,7 @@ const anime = [
       { number: 1, title: 'I’m Luffy! The Man Who Will Become Pirate King!', lengthMin: 24 },
       { number: 2, title: 'Enter the Great Swordsman! Pirate Hunter Roronoa Zoro!', lengthMin: 24 }
     ],
+    score: 8.0,
     coverImage: '/images/onepiece.jpg',
     createdAt: now()
   }

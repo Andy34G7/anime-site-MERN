@@ -1,60 +1,136 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import api from '../services/api'
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import "./Home.css";
 
-function Section({ title, items }) {
-  if (!items?.length) return null
-  return (
-    <section style={{ marginBottom: 24 }}>
-      <h2 style={{ margin: '12px 0' }}>{title}</h2>
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
-        {items.map((a) => (
-          <Link key={a.slug} to={`/anime/${a.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
-              {a.coverImage ? (
-                <img src={a.coverImage} alt={a.title} style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 6 }} />
-              ) : null}
-              <div style={{ fontWeight: 600, marginTop: 8 }}>{a.title}</div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
-  )
-}
+/* Truncate long anime titles */
+const truncate = (text, n) => {
+  return text.length > n ? text.slice(0, n) + "..." : text;
+};
 
 export default function Home() {
-  const [data, setData] = useState({ featured: [], trending: [] })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [data, setData] = useState({
+    spotlight: null,
+    featured: [],
+    trending: [],
+    comments: []
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    let active = true
-    api.get('/home')
-      .then((res) => {
-        if (active) {
-          setData(res.data)
-          setLoading(false)
-        }
-      })
-      .catch((e) => {
-        console.error(e)
-        if (active) {
-          setError('Failed to load home data')
-          setLoading(false)
-        }
-      })
-    return () => { active = false }
-  }, [])
+    let mounted = true;
 
-  if (loading) return <div style={{ padding: 24 }}>Loading…</div>
-  if (error) return <div style={{ padding: 24, color: 'crimson' }}>{error}</div>
+    async function load() {
+      try {
+        setLoading(true);
+
+        // Fetch seasonal anime (Featured)
+        const seasonal = await api.get("/seasons/now?limit=12");
+
+        // prevent 429 errors
+        await new Promise((r) => setTimeout(r, 1200));
+
+        // Fetch top anime (Trending)
+        const top = await api.get("/top/anime?limit=12");
+
+        const spotlightAnime = seasonal.data.data[0];
+
+        if (mounted) {
+          setData({
+            spotlight: {
+              title: spotlightAnime.title,
+              slug: spotlightAnime.mal_id,
+              banner: spotlightAnime.images.jpg.large_image_url,
+              description: spotlightAnime.synopsis,
+              duration: spotlightAnime.duration,
+              releaseDate: spotlightAnime.aired?.from?.slice(0, 10) || "Unknown"
+            },
+            featured: seasonal.data.data.map((a) => ({
+              title: a.title,
+              slug: a.mal_id,
+              coverImage: a.images.jpg.large_image_url
+            })),
+            trending: top.data.data.map((a) => ({
+              title: a.title,
+              slug: a.mal_id,
+              coverImage: a.images.jpg.large_image_url
+            })),
+            comments: []
+          });
+
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Jikan request failed", err);
+        setTimeout(load, 2000); // retry on rate-limit
+      }
+    }
+
+    load();
+    return () => (mounted = false);
+  }, []);
+
+  if (loading) return <div className="loading">Loading…</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-      <h1 style={{ marginBottom: 16 }}>Anime Site</h1>
-      <Section title="Featured" items={data.featured} />
-      <Section title="Trending" items={data.trending} />
+    <main className="home-container">
+      {/* ---------------- Spotlight ---------------- */}
+      {data.spotlight && (
+        <section className="spotlight-section">
+          <div className="spotlight-left">
+            <h4 className="spotlight-rank">#1 Spotlight</h4>
+            <h1 className="spotlight-title">{truncate(data.spotlight.title, 40)}</h1>
+
+            <div className="spotlight-meta">
+              <span>🕒 {data.spotlight.duration}</span>
+              <span>📅 {data.spotlight.releaseDate}</span>
+            </div>
+
+            <p className="spotlight-desc">{data.spotlight.description}</p>
+
+            <div className="spotlight-buttons">
+              <a href={`/anime/${data.spotlight.slug}`} className="btn btn-watch">
+                Watch Now
+              </a>
+              <a href={`/anime/${data.spotlight.slug}`} className="btn btn-detail">
+                Details
+              </a>
+            </div>
+          </div>
+
+          <div className="spotlight-right">
+            <img src={data.spotlight.banner} alt={data.spotlight.title} />
+          </div>
+        </section>
+      )}
+
+      {/* ---------------- Featured ---------------- */}
+      <section className="carousel-section">
+        <h2 className="section-title">Featured Anime</h2>
+        <div className="carousel-container">
+          {data.featured.map((a) => (
+            <a key={a.slug} href={`/anime/${a.slug}`} className="anime-card">
+              <img className="anime-img" src={a.coverImage} alt={a.title} />
+              <div className="anime-title">{truncate(a.title, 22)}</div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------------- Trending ---------------- */}
+      <section className="carousel-section">
+        <h2 className="section-title">Trending Now</h2>
+        <div className="carousel-container">
+          {data.trending.map((a) => (
+            <a key={a.slug} href={`/anime/${a.slug}`} className="anime-card">
+              <img className="anime-img" src={a.coverImage} alt={a.title} />
+              <div className="anime-title">{truncate(a.title, 22)}</div>
+            </a>
+          ))}
+        </div>
+      </section>
     </main>
-  )
+  );
 }

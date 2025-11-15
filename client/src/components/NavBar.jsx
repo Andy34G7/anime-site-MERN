@@ -12,6 +12,7 @@ export default function Navbar() {
 
           <ul className="menu">
             <li><Link to="/login">Log In</Link></li>
+            <li><Link to="/">Home</Link></li>
             <li><Link to="/community">Community</Link></li>
             <li><Link to="/news">News</Link></li>
             <li><Link to="/profile/username">Profile</Link></li>

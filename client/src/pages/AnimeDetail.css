@@ -1,0 +1,155 @@
+/* MAIN WRAPPER */
+.anime-detail-wrapper {
+  width: 100%;
+  min-height: calc(100vh - 80px); /* leave space for navbar */
+  background: #2a0c4a;
+  display: flex;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  box-sizing: border-box;
+}
+
+/* CONTENT CONTAINER (no glass needed) */
+.anime-detail-container {
+  display: flex;
+  gap: 40px;
+  max-width: 1250px;
+  width: 100%;
+  padding: 20px;
+  align-items: flex-start;
+}
+
+/* Anime Poster */
+.anime-poster {
+  width: 300px;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* Right side info */
+.anime-info {
+  flex: 1;
+  padding-right: 20px;
+}
+
+.anime-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d8caff;
+  margin-top: 24px;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.synopsis {
+  line-height: 1.65;
+  max-width: 85%;
+  color: #e7e1f7;
+  font-size: 15px;
+}
+
+.genres {
+  margin-top: 4px;
+  font-size: 15px;
+  color: #e7e1f7;
+}
+
+/* Episode list */
+.episode-list {
+  margin-top: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.episode-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.episode-item:last-child {
+  border-bottom: none;
+}
+
+.ep-number {
+  font-weight: 700;
+  min-width: 70px;
+  color: #caa9ff;
+}
+
+.ep-title {
+  flex: 1;
+}
+
+.ep-length {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* ---------------------------------------- */
+/* LAPTOP RESPONSIVE (1370px and below)     */
+/* ---------------------------------------- */
+@media (max-width: 1370px) {
+  .anime-detail-container {
+    gap: 32px;
+    padding: 10px;
+    max-width: 1100px;
+  }
+
+  .anime-poster {
+    width: 260px;
+  }
+}
+
+/* ---------------------------------------- */
+/* SMALLER LAPTOPS (1080px and below)       */
+/* ---------------------------------------- */
+@media (max-width: 1080px) {
+  .anime-detail-container {
+    gap: 28px;
+    max-width: 1000px;
+  }
+
+  .anime-poster {
+    width: 230px;
+  }
+
+  .anime-title {
+    font-size: 28px;
+  }
+
+  .synopsis {
+    max-width: 100%;
+  }
+}
+
+/* ---------------------------------------- */
+/* VERY SMALL LAPTOP SCREENS (900px–1000px) */
+/* ---------------------------------------- */
+@media (max-width: 950px) {
+  .anime-detail-container {
+    flex-direction: row;
+    gap: 22px;
+  }
+
+  .anime-poster {
+    width: 200px;
+  }
+
+  .anime-title {
+    font-size: 26px;
+  }
+}
