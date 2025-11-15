@@ -7,6 +7,7 @@ export default function App() {
     <>
       <div className="nav-fullwidth">
         <NavBar />
+        
       </div>
 
       {/* Routed pages render here. Pages control their own full-bleed or centered layout. */}

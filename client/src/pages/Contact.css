@@ -1,91 +1,73 @@
-/* PAGE BACKGROUND — FULL WIDTH (break out of centered root) */
+/* PAGE WRAPPER (full width) */
 .contact-page {
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
-  background: #331953; /* purple background */
-  padding: 60px 0;      /* top/bottom spacing */
-  box-sizing: border-box;
-}
-
-
-/* MAIN LAYOUT — FULL WIDTH */
-.contact-container {
-  /* Center and constrain the main content while keeping the page background full-bleed */
-  max-width: 1100px;
-  margin: 0 auto;
+  background: #331953;
+  padding: 60px 0;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 40px;
-  padding: 0 24px; /* side spacing inside the constrained container */
+  justify-content: center;
   box-sizing: border-box;
 }
 
+/* MAX WIDTH CENTERED CONTAINER */
+.contact-container {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  gap: 40px;
+  padding: 0 24px;
+  color: white;
+}
 
-
-/* LEFT CONTACT FORM — WIDER */
+/* LEFT SIDE — FORM */
 .contact-form {
   background: #d9c4e9;
   padding: 40px;
   border-radius: 35px;
-  flex: 0 0 68%; /* take ~68% of the constrained container */
-  box-sizing: border-box;
+  flex: 2; /* same as ~68% */
+  color: #2b1b39;
 }
 
-
-/* TWO-COLUMN GRID (First / Last name) */
-.form-grid {
+/* TWO INPUTS SIDE BY SIDE */
+.form-row {
   display: flex;
   gap: 20px;
 }
 
 .input-group {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  width: 100%;
-}
-
-.input-group.full {
   margin-top: 20px;
 }
-
 
 /* LABELS */
 label {
   font-size: 12px;
   font-weight: 700;
   margin-bottom: 6px;
-  color: #2b1b39;
 }
 
-
-/* INPUTS */
+/* INPUTS + TEXTAREA */
 input,
 textarea {
-  width: 100%;
   padding: 12px 15px;
   border-radius: 8px;
   border: none;
-  outline: none;
-  background: white;
+  background: #fff;
   font-size: 14px;
+  outline: none;
 }
 
 textarea {
   resize: none;
 }
 
-
-/* SEND BUTTON */
+/* BUTTON */
 .send-btn {
   margin-top: 25px;
-  width: 40%;
   padding: 12px 20px;
+  width: 40%;
   background: #a07fc2;
   color: white;
   border: none;
@@ -99,22 +81,20 @@ textarea {
   background: #8e6bb1;
 }
 
-
-/* RIGHT INFO COLUMN — NARROWER */
+/* RIGHT SIDE — CONTACT INFO */
 .contact-info {
-  flex: 0 0 28%; /* take ~28% of the constrained container */
-  color: white;
+  flex: 1; /* same as ~28% */
   padding-top: 20px;
 }
 
 .info-block {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .info-block h3 {
   font-size: 18px;
   font-weight: 800;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .info-block p {
@@ -123,16 +103,8 @@ textarea {
   margin: 4px 0;
 }
 
-.info-main {
-  font-size: 16px;
-  margin-top: 8px;
-}
-
-
-/* LINKS */
 .link {
   color: #cbb1ff;
-  cursor: pointer;
   text-decoration: underline;
-  margin-top: 6px;
+  cursor: pointer;
 }

@@ -11,7 +11,7 @@ html, body {
   width: 100%;
   min-height: 100%;
   overflow-x: hidden; /* keep page-level horizontal overflow hidden to avoid scrollbars */
-  background-color: #ffffff;
+  background-color: #331953;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
