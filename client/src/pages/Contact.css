@@ -1,0 +1,129 @@
+/* PAGE BACKGROUND — FULL WIDTH */
+.contact-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #331953; /* purple background */
+  padding: 60px 0;      /* top/bottom spacing */
+}
+
+
+/* MAIN LAYOUT — FULL WIDTH */
+.contact-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 0 60px; /* side spacing */
+}
+
+
+
+/* LEFT CONTACT FORM — WIDER */
+.contact-form {
+  background: #d9c4e9;
+  padding: 40px;
+  border-radius: 35px;
+  width: 70%;              /* wider form */
+  box-sizing: border-box;
+}
+
+
+/* TWO-COLUMN GRID (First / Last name) */
+.form-grid {
+  display: flex;
+  gap: 20px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.input-group.full {
+  margin-top: 20px;
+}
+
+
+/* LABELS */
+label {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #2b1b39;
+}
+
+
+/* INPUTS */
+input,
+textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: white;
+  font-size: 14px;
+}
+
+textarea {
+  resize: none;
+}
+
+
+/* SEND BUTTON */
+.send-btn {
+  margin-top: 25px;
+  width: 40%;
+  padding: 12px 20px;
+  background: #a07fc2;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.send-btn:hover {
+  background: #8e6bb1;
+}
+
+
+/* RIGHT INFO COLUMN — NARROWER */
+.contact-info {
+  width: 25%;         /* slimmer column */
+  color: white;
+  padding-top: 20px;
+}
+
+.info-block {
+  margin-bottom: 40px;
+}
+
+.info-block h3 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.info-block p {
+  font-size: 14px;
+  opacity: 0.9;
+  margin: 4px 0;
+}
+
+.info-main {
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+
+/* LINKS */
+.link {
+  color: #cbb1ff;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 6px;
+}
