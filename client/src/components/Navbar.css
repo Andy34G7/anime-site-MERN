@@ -12,7 +12,7 @@
 
 /* Inner wrapper that aligns navbar content with the centered page container */
 .nav-inner {
-  max-width: 1100px;
+  
   margin: 0 auto;
   padding: 0 24px;
   width: 100%;
@@ -39,8 +39,7 @@
   gap: 40px;
   min-width: 220px;
   padding-left: 0;
-  background: none !important;
-  border: none !important;
+  
 }
 
 /* Logo — white + shadow for visibility */
