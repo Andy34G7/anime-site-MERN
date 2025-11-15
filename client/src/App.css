@@ -1,8 +1,30 @@
 #root {
+  /* Constrain the main app and center it. Use .nav-fullwidth to break out the navbar when needed. */
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0; /* remove root padding so full-bleed sections can sit flush to viewport */
   text-align: center;
+}
+
+/* Full-bleed wrapper for the navbar. This breaks out of the centered root container
+   so the navbar background can span the full viewport width while the rest of the
+   page content remains centered inside #root/.container. */
+.nav-fullwidth {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  /* Simple full-bleed breakout when root has no padding */
+  margin-left: -50vw;
+  margin-right: -50vw;
+  width: 100vw;
+  box-sizing: border-box;
+}
+
+.container {
+  /* Constrain page content inside the centered root */
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .logo {

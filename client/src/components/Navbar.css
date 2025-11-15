@@ -10,6 +10,18 @@
   z-index: 10;
 }
 
+/* Inner wrapper that aligns navbar content with the centered page container */
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
 /* Blurred background */
 .nav-blur {
   position: absolute;

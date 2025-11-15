@@ -5,13 +5,22 @@
   box-sizing: border-box;
 }
 
-/* Ensures full width & height for ALL pages */
-html, body, #root {
+/* Ensures full width & height for the document root. Keep #root separate so
+   components that break out (full-bleed) aren't clipped by overflow rules. */
+html, body {
   width: 100%;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: hidden; /* keep page-level horizontal overflow hidden to avoid scrollbars */
   background-color: #ffffff;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+#root {
+  width: 100%;
+  min-height: 100%;
+  /* allow visible overflow inside #root so elements that intentionally
+     break out with negative margins (full-bleed wrappers) are not clipped */
+  overflow-x: visible;
 }
 
 /* Root theme values */
