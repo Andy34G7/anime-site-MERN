@@ -1,0 +1,102 @@
+.login-page {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column; /* Change to column to stack title above container */
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .login-title {
+    color: #D4BEE4;
+    font-family: 'Roboto', sans-serif;
+    font-size: 2rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    
+  }
+  
+  .login-container {
+    background: #D4BEE4;
+    border-radius: 12px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Rest of your CSS remains the same */
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .form-label {
+    color: black;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .form-input {
+    padding: 1rem;
+    border: 2px solid #E5E5E5;
+    border-radius: 8px;
+    background: white;
+    color: #969399;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-input:focus {
+    outline: none;
+    border-color: #9B7EBD;
+    box-shadow: 0 0 0 3px rgba(155, 126, 189, 0.1);
+  }
+  
+  .form-input::placeholder {
+    color: #969399;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+  }
+  
+  .login-button {
+    background-color: #8a6cad;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 1rem 2rem;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(155, 126, 189, 0.3);
+    margin-top: 1rem;
+  }
+  
+  .login-button:hover {
+    background-color: #8a6cad;
+    box-shadow: 0 6px 16px rgba(155, 126, 189, 0.4);
+    transform: translateY(-2px);
+  }
+  
+  .login-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(155, 126, 189, 0.3);
+  }

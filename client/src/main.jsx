@@ -11,6 +11,7 @@ import Stream from './pages/Stream'
 import AnimeDetail from './pages/AnimeDetail'
 import NotFound from './pages/NotFound'
 import Contact from './pages/Contact.jsx'
+import Login from './pages/Login' // ← ADD THIS LINE
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 const router = createBrowserRouter([
@@ -25,9 +26,9 @@ const router = createBrowserRouter([
       { path: 'profile/:username', element: <Profile /> },
       { path: 'stream/:animeId', element: <Stream /> },
       { path: 'anime/:slug', element: <AnimeDetail /> },
-      { path: 'Contact', element: <Contact /> },
+      { path: 'contact', element: <Contact /> },
+      { path: 'login', element: <Login /> }, // ← ADD THIS LINE
       { path: '*', element: <NotFound /> },
-     
     ],
   },
 ])
