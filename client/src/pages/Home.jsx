@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../services/api";
 import "./Home.css";
 
@@ -21,54 +22,82 @@ export default function Home() {
   useEffect(() => {
     let mounted = true;
 
-    async function load() {
-      try {
-        setLoading(true);
+    const CACHE_KEY = "homeCache:server:v1";
+    const MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
 
-        // Fetch seasonal anime (Featured)
-        const seasonal = await api.get("/seasons/now?limit=12");
-
-        // prevent 429 errors
-        await new Promise((r) => setTimeout(r, 1200));
-
-        // Fetch top anime (Trending)
-        const top = await api.get("/top/anime?limit=12");
-
-        const spotlightAnime = seasonal.data.data[0];
-
-        if (mounted) {
-          setData({
-            spotlight: {
-              title: spotlightAnime.title,
-              slug: spotlightAnime.mal_id,
-              banner: spotlightAnime.images.jpg.large_image_url,
-              description: spotlightAnime.synopsis,
-              duration: spotlightAnime.duration,
-              releaseDate: spotlightAnime.aired?.from?.slice(0, 10) || "Unknown"
-            },
-            featured: seasonal.data.data.map((a) => ({
-              title: a.title,
-              slug: a.mal_id,
-              coverImage: a.images.jpg.large_image_url
-            })),
-            trending: top.data.data.map((a) => ({
-              title: a.title,
-              slug: a.mal_id,
-              coverImage: a.images.jpg.large_image_url
-            })),
-            comments: []
-          });
-
+    // Try cache first for instant paint
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { ts, payload } = JSON.parse(cached);
+        if (Date.now() - ts < MAX_AGE_MS) {
+          setData(payload);
           setLoading(false);
         }
+      }
+    } catch {}
+
+    async function load() {
+      try {
+        // Load from our server
+        const homeRes = await api.get("/home");
+        const featured = homeRes.data?.featured || [];
+        const trending = homeRes.data?.trending || [];
+
+        let spotlightDoc = trending[0] || featured[0];
+        let spotlightDetail = null;
+        if (spotlightDoc?.slug) {
+          try {
+            const detailRes = await api.get(`/anime/${encodeURIComponent(spotlightDoc.slug)}`);
+            spotlightDetail = detailRes.data;
+          } catch {}
+        }
+
+        const payload = {
+          spotlight: spotlightDoc
+            ? {
+                title: spotlightDetail?.title || spotlightDoc.title,
+                slug: spotlightDoc.slug,
+                banner: spotlightDetail?.coverImage || spotlightDoc.coverImage,
+                description: spotlightDetail?.synopsis || "",
+                duration: (spotlightDetail?.episodes?.[0]?.lengthMin
+                  ? `${spotlightDetail.episodes[0].lengthMin} min`
+                  : "") || "",
+                releaseDate: ""
+              }
+            : null,
+          featured: featured.map((a) => ({
+            title: a.title,
+            slug: a.slug,
+            coverImage: a.coverImage
+          })),
+          trending: trending.map((a) => ({
+            title: a.title,
+            slug: a.slug,
+            coverImage: a.coverImage
+          })),
+          comments: []
+        };
+
+        if (mounted) {
+          setData(payload);
+          setLoading(false);
+        }
+
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), payload }));
+        } catch {}
       } catch (err) {
-        console.error("Jikan request failed", err);
-        setTimeout(load, 2000); // retry on rate-limit
+        console.error("Home data load failed", err);
+        if (mounted) {
+          setError("Failed to load content. Please retry.");
+          setLoading(false);
+        }
       }
     }
 
     load();
-    return () => (mounted = false);
+    return () => { mounted = false };
   }, []);
 
   if (loading) return <div className="loading">Loading…</div>;
@@ -101,7 +130,7 @@ export default function Home() {
           </div>
 
           <div className="spotlight-right">
-            <img src={data.spotlight.banner} alt={data.spotlight.title} />
+            <img src={data.spotlight.banner} alt={data.spotlight.title} loading="lazy" />
           </div>
         </section>
       )}
@@ -111,10 +140,10 @@ export default function Home() {
         <h2 className="section-title">Featured Anime</h2>
         <div className="carousel-container">
           {data.featured.map((a) => (
-            <a key={a.slug} href={`/anime/${a.slug}`} className="anime-card">
-              <img className="anime-img" src={a.coverImage} alt={a.title} />
+            <Link key={a.slug} to={`/anime/${a.slug}`} className="anime-card">
+              <img className="anime-img" src={a.coverImage} alt={a.title} loading="lazy" />
               <div className="anime-title">{truncate(a.title, 22)}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -124,10 +153,10 @@ export default function Home() {
         <h2 className="section-title">Trending Now</h2>
         <div className="carousel-container">
           {data.trending.map((a) => (
-            <a key={a.slug} href={`/anime/${a.slug}`} className="anime-card">
-              <img className="anime-img" src={a.coverImage} alt={a.title} />
+            <Link key={a.slug} to={`/anime/${a.slug}`} className="anime-card">
+              <img className="anime-img" src={a.coverImage} alt={a.title} loading="lazy" />
               <div className="anime-title">{truncate(a.title, 22)}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>

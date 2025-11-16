@@ -17,19 +17,40 @@ const Intropage = () => {
   const carouselRef = useRef(null);
 
   useEffect(() => {
+    let active = true;
+    const CACHE_KEY = 'topAnimeCache:server:v1';
+    const MAX_AGE_MS = 10 * 60 * 1000;
+
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { ts, data } = JSON.parse(cached);
+        if (Date.now() - ts < MAX_AGE_MS) {
+          setTopAnime(data);
+          setLoading(false);
+        }
+      }
+    } catch {}
+
     const fetchTopAnime = async () => {
       try {
-        setLoading(true);
-        const response = await api.get('/top/anime?limit=15');
-        setTopAnime(response.data.data);
+        const response = await api.get('/home');
+        const list = response.data?.trending || [];
+        if (active) {
+          setTopAnime(list);
+          setLoading(false);
+        }
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: list }));
+        } catch {}
       } catch (error) {
         console.error('Error fetching top anime:', error);
-      } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     
     fetchTopAnime();
+    return () => { active = false };
   }, []);
 
   const truncateTitle = (title, maxLength = 22) => {
@@ -184,14 +205,15 @@ const Intropage = () => {
           <div className="carousel-container">
             <div className="carousel-track" ref={carouselRef}>
               {topAnime.map((anime) => (
-                <div key={anime.mal_id} className="anime-card">
+                <div key={anime.slug} className="anime-card">
                   <img 
                     className="anime-img" 
-                    src={anime.images.jpg.large_image_url} 
-                    alt={anime.title} 
+                    src={anime.coverImage}
+                    alt={anime.title}
+                    loading="lazy"
                   />
                   <div className="anime-title">
-                    {truncateTitle(anime.title.english || anime.title)}
+                    {truncateTitle(anime.title)}
                   </div>
                 </div>
               ))}

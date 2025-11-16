@@ -25,7 +25,7 @@ const anime = [
       { number: 2, title: 'My Name is Konohamaru!', lengthMin: 23 }
     ],
     score: 8.6,
-    coverImage: '/images/naruto.jpg',
+    coverImage: 'https://placehold.co/400x600?text=Naruto',
     createdAt: now()
   },
   {
@@ -39,7 +39,98 @@ const anime = [
       { number: 2, title: 'Enter the Great Swordsman! Pirate Hunter Roronoa Zoro!', lengthMin: 24 }
     ],
     score: 8.0,
-    coverImage: '/images/onepiece.jpg',
+    coverImage: 'https://placehold.co/400x600?text=One+Piece',
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    slug: 'attack-on-titan',
+    title: 'Attack on Titan',
+    synopsis: 'Humanity fights for survival within walls against man-eating titans.',
+    genres: ['Action', 'Drama', 'Dark Fantasy'],
+    episodes: [
+      { number: 1, title: 'To You, in 2000 Years: The Fall of Shiganshina, Pt. 1', lengthMin: 24 }
+    ],
+    score: 9.0,
+    coverImage: 'https://placehold.co/400x600?text=AOT',
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    slug: 'demon-slayer',
+    title: 'Demon Slayer',
+    synopsis: 'A boy becomes a demon slayer to cure his sister.',
+    genres: ['Action', 'Supernatural'],
+    episodes: [
+      { number: 1, title: 'Cruelty', lengthMin: 24 }
+    ],
+    score: 8.7,
+    coverImage: 'https://placehold.co/400x600?text=Kimetsu',
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    slug: 'fullmetal-alchemist-brotherhood',
+    title: 'Fullmetal Alchemist: Brotherhood',
+    synopsis: 'Two brothers seek the Philosopher’s Stone after a failed ritual.',
+    genres: ['Action', 'Adventure', 'Fantasy'],
+    episodes: [
+      { number: 1, title: 'Fullmetal Alchemist', lengthMin: 24 }
+    ],
+    score: 9.1,
+    coverImage: 'https://placehold.co/400x600?text=FMAB',
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    slug: 'my-hero-academia',
+    title: 'My Hero Academia',
+    synopsis: 'A boy without powers enrolls in a hero academy.',
+    genres: ['Action', 'Superhero'],
+    episodes: [
+      { number: 1, title: 'Izuku Midoriya: Origin', lengthMin: 24 }
+    ],
+    score: 8.2,
+    coverImage: 'https://placehold.co/400x600?text=MHA',
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    slug: 'jujutsu-kaisen',
+    title: 'Jujutsu Kaisen',
+    synopsis: 'A student swallows a cursed talisman to save his friends.',
+    genres: ['Action', 'Supernatural'],
+    episodes: [
+      { number: 1, title: 'Ryomen Sukuna', lengthMin: 24 }
+    ],
+    score: 8.6,
+    coverImage: 'https://placehold.co/400x600?text=JJK',
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    slug: 'death-note',
+    title: 'Death Note',
+    synopsis: 'A student finds a notebook that kills anyone whose name is written.',
+    genres: ['Thriller', 'Supernatural'],
+    episodes: [
+      { number: 1, title: 'Rebirth', lengthMin: 23 }
+    ],
+    score: 8.7,
+    coverImage: 'https://placehold.co/400x600?text=Death+Note',
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    slug: 'hunter-x-hunter',
+    title: 'Hunter x Hunter',
+    synopsis: 'A boy becomes a Hunter to find his father.',
+    genres: ['Adventure', 'Action'],
+    episodes: [
+      { number: 1, title: 'Departure × Friends', lengthMin: 23 }
+    ],
+    score: 8.9,
+    coverImage: 'https://placehold.co/400x600?text=HxH',
     createdAt: now()
   }
 ]
