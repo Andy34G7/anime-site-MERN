@@ -10,11 +10,18 @@ import { getDb } from './data/db.js'
 import path from 'node:path'
 import multer from 'multer'
 import { sendPasswordResetEmail } from './utils/mailer.js'
+import helmet from 'helmet'
+import { requireAuth, requireRole } from './utils/rbac.js'
+import { transcodeEpisode } from './utils/transcode.js'
+import { ObjectId } from 'mongodb'
 
 dotenv.config()
 
 const app = express()
 app.use(cors())
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}))
 app.use(express.json())
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret'
@@ -35,6 +42,8 @@ function authMiddleware(req, res, next) {
 }
 
 app.use(authMiddleware)
+
+// In-process transcode runner (no Redis). Fire-and-forget background job.
 // Local CDN: serve media files with cache headers
 const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'server', 'media')
 function setCdnHeaders(res, filePath) {
@@ -80,29 +89,66 @@ const uploadImages = makeMulterFor('images', Number(process.env.UPLOAD_LIMIT_IMA
 const uploadClips = makeMulterFor('clips', Number(process.env.UPLOAD_LIMIT_CLIPS || 200 * 1024 * 1024))  // 200MB
 const uploadEpisodes = makeMulterFor('episodes', Number(process.env.UPLOAD_LIMIT_EPISODES || 1_500 * 1024 * 1024)) // ~1.5GB
 
-app.post('/api/upload/images', requireAuth, uploadImages.single('file'), (req, res) => {
+// Restrict uploads to moderators/admins
+app.post('/api/upload/images', requireRole('moderator', 'admin'), uploadImages.single('file'), (req, res) => {
   const rel = `/cdn/images/${path.basename(req.file.path)}`
   res.status(201).json({ path: rel, size: req.file.size, mimetype: req.file.mimetype })
 })
-app.post('/api/upload/clips', requireAuth, uploadClips.single('file'), (req, res) => {
+app.post('/api/upload/clips', requireRole('moderator', 'admin'), uploadClips.single('file'), (req, res) => {
   const rel = `/cdn/clips/${path.basename(req.file.path)}`
   res.status(201).json({ path: rel, size: req.file.size, mimetype: req.file.mimetype })
 })
-app.post('/api/upload/episodes', requireAuth, uploadEpisodes.single('file'), (req, res) => {
-  const rel = `/cdn/episodes/${path.basename(req.file.path)}`
-  res.status(201).json({ path: rel, size: req.file.size, mimetype: req.file.mimetype })
+app.post('/api/upload/episodes', requireRole('moderator', 'admin'), uploadEpisodes.single('file'), async (req, res, next) => {
+  try {
+    const rel = `/cdn/episodes/${path.basename(req.file.path)}`
+    const db = await getDb()
+    const doc = {
+      createdBy: req.user.username,
+      filePath: req.file.path,
+      publicPath: rel,
+      status: 'queued',
+      hlsPath: null,
+      variants: [],
+      createdAt: new Date(),
+    }
+    const result = await db.collection('episodes').insertOne(doc)
+    const id = result.insertedId.toString()
+    // Start transcode in background
+    const outDir = path.join(MEDIA_ROOT, 'hls', id)
+    ;(async () => {
+      try {
+        await db.collection('episodes').updateOne({ _id: result.insertedId }, { $set: { status: 'processing' } })
+        await transcodeEpisode({ episodeId: id, sourcePath: req.file.path, outputDir: outDir, update: async (fields) => {
+          await db.collection('episodes').updateOne({ _id: result.insertedId }, { $set: { status: 'ready', ...fields } })
+        } })
+      } catch (err) {
+        console.error('Transcode failed:', err.message)
+        await db.collection('episodes').updateOne({ _id: result.insertedId }, { $set: { status: 'failed', error: err.message } })
+      }
+    })()
+    res.status(201).json({ id, path: rel, size: req.file.size, mimetype: req.file.mimetype, status: 'queued' })
+  } catch (e) { next(e) }
 })
 // Rate limiters
 const basicLimiter = rateLimit({ windowMs: 60_000, max: 300 })
 app.use(basicLimiter)
 const authLimiter = rateLimit({ windowMs: 60_000, max: 10 })
-function requireAuth(req, res, next) {
-  if (!req.user || !req.user.username) return res.status(401).json({ error: 'Unauthorized' })
-  next()
-}
 
 
 // DB is lazily initialized via getDb() when endpoints are hit.
+// Ensure indexes once on startup
+(async () => {
+  try {
+    const db = await getDb()
+    await db.collection('anime').createIndex({ slug: 1 }, { unique: true })
+    await db.collection('anime').createIndex({ title: 'text', synopsis: 'text' })
+    await db.collection('communityPosts').createIndex({ createdAt: -1 })
+    await db.collection('episodes').createIndex({ createdAt: -1 })
+    console.log('Indexes ensured')
+  } catch (e) {
+    console.warn('Indexing failed:', e.message)
+  }
+})()
 
 // Home
 app.get('/api/home', async (req, res, next) => {
@@ -128,12 +174,11 @@ app.get('/api/stream/:animeId', (req, res) => {
 app.get('/api/community/posts', async (req, res, next) => {
   try {
     const db = await getDb()
-    const posts = await db
-      .collection('communityPosts')
-      .find()
-      .sort({ createdAt: -1 })
-      .toArray()
-    res.json({ posts })
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20))
+    const cursor = db.collection('communityPosts').find().sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit)
+    const posts = await cursor.toArray()
+    res.json({ posts, page, limit })
   } catch (e) { next(e) }
 })
 
@@ -146,6 +191,37 @@ app.post('/api/community/posts', requireAuth, async (req, res, next) => {
     const doc = { author: req.user.username, title, body, likes: 0, createdAt: new Date() }
     await db.collection('communityPosts').insertOne(doc)
     res.status(201).json({ post: doc })
+  } catch (e) { next(e) }
+})
+
+// Comments
+app.post('/api/community/posts/:id/comments', requireAuth, async (req, res, next) => {
+  try {
+    const { text } = req.body
+    if (!text) return res.status(400).json({ error: 'Missing text' })
+    const db = await getDb()
+    const comment = { _id: crypto.randomUUID(), author: req.user.username, text, createdAt: new Date() }
+    await db.collection('communityPosts').updateOne({ _id: new ObjectId(req.params.id) }, { $push: { comments: comment } })
+    res.status(201).json({ comment })
+  } catch (e) { next(e) }
+})
+
+app.delete('/api/community/posts/:id', requireRole('moderator', 'admin'), async (req, res, next) => {
+  try {
+    const db = await getDb()
+    await db.collection('communityPosts').deleteOne({ _id: new ObjectId(req.params.id) })
+    res.json({ ok: true })
+  } catch (e) { next(e) }
+})
+
+app.delete('/api/community/posts/:postId/comments/:commentId', requireRole('moderator', 'admin'), async (req, res, next) => {
+  try {
+    const db = await getDb()
+    await db.collection('communityPosts').updateOne(
+      { _id: new ObjectId(req.params.postId) },
+      { $pull: { comments: { _id: req.params.commentId } } }
+    )
+    res.json({ ok: true })
   } catch (e) { next(e) }
 })
 // Profile
@@ -182,11 +258,11 @@ app.post('/api/auth/register', authLimiter,
       if (exists) return res.status(409).json({ error: 'User already exists' })
 
       const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
-        const user = { username, email, passwordHash, avatar: '/avatars/default.svg', favorites: [], createdAt: new Date() }
+        const user = { username, email, passwordHash, avatar: '/avatars/default.svg', favorites: [], role: 'user', createdAt: new Date() }
 
       await db.collection('users').insertOne(user)
-      const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '7d' })
-      res.json({ token, user: { username: user.username, avatar: user.avatar } })
+      const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' })
+      res.json({ token, user: { username: user.username, avatar: user.avatar, role: user.role } })
     } catch (e) { next(e) }
   }
 )
@@ -209,8 +285,8 @@ app.post('/api/auth/login', authLimiter,
       const ok = await bcrypt.compare(password, user.passwordHash || '')
       if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
 
-      const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '7d' })
-      res.json({ token, user: { username: user.username, avatar: user.avatar, favorites: user.favorites || [] } })
+      const token = jwt.sign({ username: user.username, role: user.role || 'user' }, JWT_SECRET, { expiresIn: '7d' })
+      res.json({ token, user: { username: user.username, avatar: user.avatar, favorites: user.favorites || [], role: user.role || 'user' } })
     } catch (e) { next(e) }
   }
 )
@@ -289,6 +365,49 @@ app.get('/api/clips', async (req, res, next) => {
     res.json({ clips: list })
   } catch (e) { next(e) }
 })
+
+// Episodes
+app.get('/api/episodes/:id', async (req, res, next) => {
+  try {
+    const db = await getDb()
+    const doc = await db.collection('episodes').findOne({ _id: new ObjectId(req.params.id) })
+    if (!doc) return res.status(404).json({ error: 'Not found' })
+    res.json(doc)
+  } catch (e) { next(e) }
+})
+
+// Admin requeue transcode
+app.post('/api/admin/transcode/:id', requireRole('moderator', 'admin'), async (req, res, next) => {
+  try {
+    const id = req.params.id
+    const db = await getDb()
+    const ep = await db.collection('episodes').findOne({ _id: new ObjectId(id) })
+    if (!ep) return res.status(404).json({ error: 'Episode not found' })
+    const outDir = path.join(MEDIA_ROOT, 'hls', id)
+    ;(async () => {
+      try {
+        await db.collection('episodes').updateOne({ _id: ep._id }, { $set: { status: 'processing', error: null } })
+        await transcodeEpisode({ episodeId: id, sourcePath: ep.filePath, outputDir: outDir, update: async (fields) => {
+          await db.collection('episodes').updateOne({ _id: ep._id }, { $set: { status: 'ready', ...fields } })
+        } })
+      } catch (err) {
+        console.error('Transcode failed:', err.message)
+        await db.collection('episodes').updateOne({ _id: ep._id }, { $set: { status: 'failed', error: err.message } })
+      }
+    })()
+    
+    res.json({ ok: true })
+  } catch (e) { next(e) }
+})
+
+app.get('/api/admin/episodes', requireRole('moderator', 'admin'), async (req, res, next) => {
+  try {
+    const db = await getDb()
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20))
+    const list = await db.collection('episodes').find().sort({ createdAt: -1 }).limit(limit).toArray()
+    res.json({ episodes: list })
+  } catch (e) { next(e) }
+})
 // Detailed anime page
 app.get('/api/anime/:animeId', async (req, res, next) => {
   try {
@@ -296,6 +415,23 @@ app.get('/api/anime/:animeId', async (req, res, next) => {
     const doc = await db.collection('anime').findOne({ slug: req.params.animeId })
     if (!doc) return res.status(404).json({ error: 'Not found' })
     res.json(doc)
+  } catch (e) { next(e) }
+})
+
+// Search
+app.get('/api/search', async (req, res, next) => {
+  try {
+    const q = (req.query.q || '').toString().trim()
+    if (!q) return res.json({ results: [], page: 1, limit: 20 })
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20))
+    const db = await getDb()
+    const cursor = db.collection('anime').find({ $text: { $search: q } }, { projection: { score: { $meta: 'textScore' }, title: 1, slug: 1, coverImage: 1, synopsis: 1 } })
+      .sort({ score: { $meta: 'textScore' } })
+      .skip((page - 1) * limit)
+      .limit(limit)
+    const results = await cursor.toArray()
+    res.json({ results, page, limit })
   } catch (e) { next(e) }
 })
 

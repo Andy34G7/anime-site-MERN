@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
-  const { token, username, logout } = useAuth();
+  const { token, username, role, logout } = useAuth();
   const navigate = useNavigate();
 
   const profileHref = username ? `/profile/${username}` : '/login';
@@ -24,12 +24,13 @@ export default function Navbar() {
             <li><Link to="/news">News</Link></li>
             <li><Link to="/contact">Contact Us</Link></li>
             <li><Link to={profileHref}>Profile</Link></li>
-            {token && <li><Link to="/upload">Upload</Link></li>}
+            {(role === 'moderator' || role === 'admin') && <li><Link to="/upload">Upload</Link></li>}
             {token && (
               <li>
                 <button onClick={() => { logout(); navigate('/') }} className="logout-btn">Logout</button>
               </li>
             )}
+            {(role === 'moderator' || role === 'admin') && <li><Link to="/admin">Admin</Link></li>}
           </ul>
         </div>
 

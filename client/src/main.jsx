@@ -14,6 +14,7 @@ import ResetPassword from './pages/ResetPassword.jsx'
 import Login from './pages/Login'
 import Contact from './pages/Contact.jsx'
 import Upload from './pages/Upload.jsx'
+import Admin from './pages/Admin.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
       { path: 'login', element: <Login /> },
       { path: 'reset', element: <ResetPassword /> },
       { path: 'upload', element: <Upload /> },
+      { path: 'admin', element: <Admin /> },
       { path: '*', element: <NotFound /> },
     ],
   },

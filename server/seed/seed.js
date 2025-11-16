@@ -3,6 +3,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { MongoClient, ObjectId } from 'mongodb'
 import bcrypt from 'bcrypt'
+import crypto from 'node:crypto'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -10,7 +11,10 @@ const __dirname = path.dirname(__filename)
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
 const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017'
-const dbName = process.env.DB_NAME || 'anime_dev'
+const dbName = process.env.DB_NAME || 'animeDB'
+function cryptoRandom() {
+  return crypto.randomUUID()
+}
 
 const now = () => new Date()
 
@@ -140,8 +144,30 @@ const users = [
   {
     _id: new ObjectId(),
     username: 'demo',
-    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=demo',
+    email: 'demo@example.com',
+    role: 'user',
+    avatar: '/avatars/default.svg',
     favorites: ['naruto'],
+    clips: [],
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    username: 'admin',
+    email: 'admin@example.com',
+    role: 'admin',
+    avatar: '/avatars/default.svg',
+    favorites: [],
+    clips: [],
+    createdAt: now()
+  },
+  {
+    _id: new ObjectId(),
+    username: 'mod',
+    email: 'mod@example.com',
+    role: 'moderator',
+    avatar: '/avatars/default.svg',
+    favorites: [],
     clips: [],
     createdAt: now()
   }
@@ -154,6 +180,10 @@ const communityPosts = [
     title: 'Welcome Thread',
     body: 'Introduce yourself and share favorite anime!',
     likes: 3,
+    comments: [
+      { _id: cryptoRandom(), author: 'admin', text: 'Welcome aboard!', createdAt: now() },
+      { _id: cryptoRandom(), author: 'mod', text: 'Please be kind and follow the rules.', createdAt: now() }
+    ],
     createdAt: now()
   }
 ]
@@ -200,11 +230,25 @@ async function seed() {
   const usersCol = db.collection('users')
   const demo = await usersCol.findOne({ username: 'demo' })
   if (!demo) {
-    await usersCol.insertOne({ username: 'demo', email: 'demo@example.com', passwordHash, avatar: '/avatars/default.svg', favorites: ['naruto'], clips: [], createdAt: now() })
+    await usersCol.insertOne({ username: 'demo', email: 'demo@example.com', role: 'user', passwordHash, avatar: '/avatars/default.svg', favorites: ['naruto'], clips: [], createdAt: now() })
     console.log('Inserted demo user with default password')
   } else if (!demo.passwordHash) {
-    await usersCol.updateOne({ _id: demo._id }, { $set: { passwordHash, email: demo.email || 'demo@example.com' } })
+    await usersCol.updateOne({ _id: demo._id }, { $set: { passwordHash, role: demo.role || 'user', email: demo.email || 'demo@example.com' } })
     console.log('Updated demo user with password')
+  }
+
+  // Ensure admin and mod with passwords
+  const admin = await usersCol.findOne({ username: 'admin' })
+  if (!admin) {
+    const hash = await bcrypt.hash('AdminPass123!', 10)
+    await usersCol.insertOne({ username: 'admin', email: 'admin@example.com', role: 'admin', passwordHash: hash, avatar: '/avatars/default.svg', favorites: [], clips: [], createdAt: now() })
+    console.log('Inserted admin user (AdminPass123!)')
+  }
+  const mod = await usersCol.findOne({ username: 'mod' })
+  if (!mod) {
+    const hash = await bcrypt.hash('ModPass123!', 10)
+    await usersCol.insertOne({ username: 'mod', email: 'mod@example.com', role: 'moderator', passwordHash: hash, avatar: '/avatars/default.svg', favorites: [], clips: [], createdAt: now() })
+    console.log('Inserted moderator user (ModPass123!)')
   }
 
   await client.close()
