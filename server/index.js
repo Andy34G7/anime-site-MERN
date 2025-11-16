@@ -3,7 +3,6 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import rateLimit from 'express-rate-limit'
 import { body, validationResult } from 'express-validator'
 import crypto from 'node:crypto'
 import { getDb } from './data/db.js'
@@ -102,12 +101,18 @@ app.post('/api/upload/clips', requireRole('moderator', 'admin'), uploadClips.sin
 })
 app.post('/api/upload/episodes', requireRole('moderator', 'admin'), uploadEpisodes.single('file'), async (req, res, next) => {
   try {
+    const { animeSlug, episodeNumber } = req.body
+    if (!animeSlug || !episodeNumber) return res.status(400).json({ error: 'animeSlug and episodeNumber required' })
     const rel = `/cdn/episodes/${path.basename(req.file.path)}`
     const db = await getDb()
+    const anime = await db.collection('anime').findOne({ slug: animeSlug })
+    if (!anime) return res.status(404).json({ error: 'Anime not found' })
     const doc = {
       createdBy: req.user.username,
       filePath: req.file.path,
       publicPath: rel,
+      animeSlug,
+      episodeNumber: Number(episodeNumber),
       status: 'queued',
       hlsPath: null,
       variants: [],
@@ -133,7 +138,10 @@ app.post('/api/upload/episodes', requireRole('moderator', 'admin'), uploadEpisod
 })
 // Rate limiting temporarily disabled due to runtime error with express-rate-limit in this environment.
 // Provide no-op middleware placeholders; re-enable with stable configuration later.
-const authLimiter = (req, res, next) => next()
+function authLimiter(req, res, next) {
+  if (typeof next === 'function') return next()
+  return undefined
+}
 
 
 // DB is lazily initialized via getDb() when endpoints are hit.
@@ -168,8 +176,19 @@ app.get('/api/about', (req, res) => {
   res.json({ app: 'Anime Site', version: '1.0.0' })
 })
 // Stream page (episode list or stream metadata)
-app.get('/api/stream/:animeId', (req, res) => {
-  res.json({ animeId: req.params.animeId, episodes: [] })
+// Stream metadata: anime + linked episodes
+app.get('/api/stream/:animeId', async (req, res, next) => {
+  try {
+    const db = await getDb()
+    const anime = await db.collection('anime').findOne({ slug: req.params.animeId })
+    if (!anime) return res.status(404).json({ error: 'Anime not found' })
+    const episodes = await db.collection('episodes')
+      .find({ animeSlug: req.params.animeId })
+      .sort({ episodeNumber: 1 })
+      .project({ filePath: 0 })
+      .toArray()
+    res.json({ anime: { slug: anime.slug, title: anime.title, synopsis: anime.synopsis, coverImage: anime.coverImage }, episodes })
+  } catch (e) { next(e) }
 })
 // Community posts
 app.get('/api/community/posts', async (req, res, next) => {
@@ -409,6 +428,62 @@ app.get('/api/admin/episodes', requireRole('moderator', 'admin'), async (req, re
     res.json({ episodes: list })
   } catch (e) { next(e) }
 })
+
+// Update episode linkage (animeSlug, episodeNumber)
+app.put('/api/admin/episodes/:id', requireRole('moderator', 'admin'), async (req, res, next) => {
+  try {
+    const { animeSlug, episodeNumber } = req.body
+    if (!animeSlug || !episodeNumber) return res.status(400).json({ error: 'animeSlug and episodeNumber required' })
+    const db = await getDb()
+    const anime = await db.collection('anime').findOne({ slug: animeSlug })
+    if (!anime) return res.status(404).json({ error: 'Anime not found' })
+    const id = new ObjectId(req.params.id)
+    await db.collection('episodes').updateOne({ _id: id }, { $set: { animeSlug, episodeNumber: Number(episodeNumber) } })
+    const doc = await db.collection('episodes').findOne({ _id: id })
+    res.json({ episode: doc })
+  } catch (e) { next(e) }
+})
+
+// Backfill episodes linkage by filename heuristics
+app.post('/api/admin/backfill/episodes', requireRole('moderator', 'admin'), async (req, res, next) => {
+  try {
+    const db = await getDb()
+    const dryRun = String(req.query.dryRun || 'false').toLowerCase() === 'true'
+    const animeList = await db.collection('anime').find({}, { projection: { slug: 1 } }).toArray()
+    const slugs = animeList.map(a => a.slug).sort((a,b) => b.length - a.length) // prefer longest slug first
+    const candidates = await db.collection('episodes').find({ $or: [ { animeSlug: { $exists: false } }, { animeSlug: null }, { episodeNumber: { $exists: false } } ] }).toArray()
+
+    const changes = []
+    for (const ep of candidates) {
+      const base = (ep.filePath || '').split('/').pop()?.replace(/\.[^/.]+$/, '') || ''
+      let foundSlug = null
+      for (const s of slugs) {
+        if (base.startsWith(s) || base.includes(`${s}-`) || base.includes(`${s}_`) || base.includes(`${s}.`)) {
+          foundSlug = s; break
+        }
+      }
+      let num = null
+      // prefer explicit tokens like ep12 or episode_12
+      const m1 = base.match(/(?:ep|episode|e)[ _.-]?(\d{1,4})/i)
+      if (m1) num = Number(m1[1])
+      if (!num) {
+        const m2 = base.match(/(\d{1,4})(?!.*\d)/) // last number run
+        if (m2) num = Number(m2[1])
+      }
+      if (foundSlug && num) {
+        changes.push({ _id: ep._id, animeSlug: foundSlug, episodeNumber: num })
+      }
+    }
+
+    if (!dryRun) {
+      for (const c of changes) {
+        await db.collection('episodes').updateOne({ _id: c._id }, { $set: { animeSlug: c.animeSlug, episodeNumber: c.episodeNumber } })
+      }
+    }
+
+    res.json({ count: changes.length, dryRun, applied: dryRun ? 0 : changes.length, changes })
+  } catch (e) { next(e) }
+})
 // Detailed anime page
 app.get('/api/anime/:animeId', async (req, res, next) => {
   try {
@@ -427,12 +502,32 @@ app.get('/api/search', async (req, res, next) => {
     const page = Math.max(1, Number(req.query.page) || 1)
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20))
     const db = await getDb()
-    const cursor = db.collection('anime').find({ $text: { $search: q } }, { projection: { score: { $meta: 'textScore' }, title: 1, slug: 1, coverImage: 1, synopsis: 1 } })
-      .sort({ score: { $meta: 'textScore' } })
-      .skip((page - 1) * limit)
-      .limit(limit)
-    const results = await cursor.toArray()
-    res.json({ results, page, limit })
+    try {
+      const cursor = db.collection('anime').find(
+        { $text: { $search: q } },
+        { projection: { score: { $meta: 'textScore' }, title: 1, slug: 1, coverImage: 1, synopsis: 1 } }
+      )
+        .sort({ score: { $meta: 'textScore' } })
+        .skip((page - 1) * limit)
+        .limit(limit)
+      const results = await cursor.toArray()
+      return res.json({ results, page, limit })
+    } catch (err) {
+      // If text index missing (code 27), create it and fall back to regex search immediately
+      if (err && (err.code === 27 || err.codeName === 'IndexNotFound')) {
+        try {
+          await db.collection('anime').createIndex({ title: 'text', synopsis: 'text' }, { name: 'anime_text_idx' })
+        } catch (_) { /* ignore index racing */ }
+        const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+        const results = await db.collection('anime')
+          .find({ $or: [{ title: rx }, { synopsis: rx }] }, { projection: { title: 1, slug: 1, coverImage: 1, synopsis: 1 } })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .toArray()
+        return res.json({ results, page, limit, fallback: true })
+      }
+      throw err
+    }
   } catch (e) { next(e) }
 })
 

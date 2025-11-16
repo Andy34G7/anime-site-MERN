@@ -15,6 +15,7 @@ import Login from './pages/Login'
 import Contact from './pages/Contact.jsx'
 import Upload from './pages/Upload.jsx'
 import Admin from './pages/Admin.jsx'
+import Search from './pages/Search.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
       { path: 'reset', element: <ResetPassword /> },
       { path: 'upload', element: <Upload /> },
       { path: 'admin', element: <Admin /> },
+      { path: 'search', element: <Search /> },
       { path: '*', element: <NotFound /> },
     ],
   },

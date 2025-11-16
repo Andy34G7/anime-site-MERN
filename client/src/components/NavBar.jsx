@@ -37,8 +37,10 @@ export default function Navbar() {
         <div className="nav-right">
           <div className="search-box">
             <span className="icon">☰</span>
-            <input type="text" placeholder="Search" />
-            <span className="icon">🔍</span>
+            <form onSubmit={(e)=>{e.preventDefault(); const v=e.target.elements.q.value.trim(); if(v) navigate(`/search?q=${encodeURIComponent(v)}`)}} style={{display:'flex',alignItems:'center',gap:8}}>
+              <input name="q" type="text" placeholder="Search anime..." />
+              <button type="submit" style={{background:'transparent',border:'none',cursor:'pointer'}} aria-label="Search">🔍</button>
+            </form>
           </div>
         </div>
       </div>

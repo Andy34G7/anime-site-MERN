@@ -6,6 +6,8 @@ export default function Upload() {
   const { token } = useAuth()
   const [type, setType] = useState('images')
   const [file, setFile] = useState(null)
+  const [animeSlug, setAnimeSlug] = useState('')
+  const [episodeNumber, setEpisodeNumber] = useState('')
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -19,6 +21,10 @@ export default function Upload() {
       setLoading(true)
       const form = new FormData()
       form.append('file', file)
+      if (type === 'episodes') {
+        form.append('animeSlug', animeSlug)
+        form.append('episodeNumber', episodeNumber)
+      }
       const res = await api.post(`/upload/${type}`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
       setResult(res.data)
     } catch (err) {
@@ -38,6 +44,18 @@ export default function Upload() {
             <option value="episodes">Episodes</option>
           </select>
         </div>
+        {type === 'episodes' && (
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div className="form-group">
+              <label className="form-label">Anime Slug</label>
+              <input className="form-input" value={animeSlug} onChange={e=>setAnimeSlug(e.target.value)} placeholder="e.g. naruto" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Episode Number</label>
+              <input className="form-input" type="number" value={episodeNumber} onChange={e=>setEpisodeNumber(e.target.value)} min="1" />
+            </div>
+          </div>
+        )}
         <div className="form-group">
           <label className="form-label">File</label>
           <input className="form-input" type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
