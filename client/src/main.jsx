@@ -13,6 +13,7 @@ import NotFound from './pages/NotFound'
 import ResetPassword from './pages/ResetPassword.jsx'
 import Login from './pages/Login'
 import Contact from './pages/Contact.jsx'
+import Upload from './pages/Upload.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       { path: 'Contact', element: <Contact /> },
       { path: 'login', element: <Login /> },
       { path: 'reset', element: <ResetPassword /> },
+      { path: 'upload', element: <Upload /> },
       { path: '*', element: <NotFound /> },
     ],
   },

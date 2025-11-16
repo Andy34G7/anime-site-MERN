@@ -24,6 +24,7 @@ export default function Navbar() {
             <li><Link to="/news">News</Link></li>
             <li><Link to="/contact">Contact Us</Link></li>
             <li><Link to={profileHref}>Profile</Link></li>
+            {token && <li><Link to="/upload">Upload</Link></li>}
             {token && (
               <li>
                 <button onClick={() => { logout(); navigate('/') }} className="logout-btn">Logout</button>

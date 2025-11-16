@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600" role="img" aria-label="Default poster">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1b1e2b"/>
+      <stop offset="100%" stop-color="#101320"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#bg)"/>
+  <rect x="40" y="80" width="320" height="440" rx="12" fill="#2a2f45"/>
+  <g fill="#cfd8e3" font-family="sans-serif" text-anchor="middle">
+    <text x="200" y="320" font-size="28">ANIME</text>
+    <text x="200" y="360" font-size="20" opacity="0.8">Poster</text>
+  </g>
+</svg>

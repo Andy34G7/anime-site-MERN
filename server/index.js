@@ -7,6 +7,8 @@ import rateLimit from 'express-rate-limit'
 import { body, validationResult } from 'express-validator'
 import crypto from 'node:crypto'
 import { getDb } from './data/db.js'
+import path from 'node:path'
+import multer from 'multer'
 import { sendPasswordResetEmail } from './utils/mailer.js'
 
 dotenv.config()
@@ -33,6 +35,63 @@ function authMiddleware(req, res, next) {
 }
 
 app.use(authMiddleware)
+// Local CDN: serve media files with cache headers
+const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'server', 'media')
+function setCdnHeaders(res, filePath) {
+  const ext = (filePath || '').toLowerCase()
+  if (ext.endsWith('.jpg') || ext.endsWith('.jpeg') || ext.endsWith('.png') || ext.endsWith('.gif') || ext.endsWith('.webp') || ext.endsWith('.svg')) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+  } else if (ext.endsWith('.mp4') || ext.endsWith('.webm') || ext.endsWith('.mkv') || ext.endsWith('.mp3') || ext.endsWith('.aac') || ext.endsWith('.wav')) {
+    res.setHeader('Cache-Control', 'public, max-age=604800')
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=3600')
+  }
+  res.setHeader('Accept-Ranges', 'bytes')
+}
+app.use('/cdn', express.static(MEDIA_ROOT, {
+  dotfiles: 'ignore',
+  etag: true,
+  lastModified: true,
+  fallthrough: true,
+  setHeaders: setCdnHeaders
+}))
+
+// ---- Upload endpoints (protected) ----
+function sanitizeFilename(name) {
+  return name.replace(/[^a-zA-Z0-9._-]/g, '_')
+}
+
+function makeMulterFor(subdir, fileSize) {
+  const dest = path.join(MEDIA_ROOT, subdir)
+  const storage = multer.diskStorage({
+    destination: dest,
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase()
+      const base = path.basename(file.originalname, ext).toLowerCase()
+      const safe = sanitizeFilename(base)
+      const stamp = Date.now()
+      cb(null, `${safe}-${stamp}${ext}`)
+    }
+  })
+  return multer({ storage, limits: { fileSize } })
+}
+
+const uploadImages = makeMulterFor('images', Number(process.env.UPLOAD_LIMIT_IMAGES || 10 * 1024 * 1024)) // 10MB
+const uploadClips = makeMulterFor('clips', Number(process.env.UPLOAD_LIMIT_CLIPS || 200 * 1024 * 1024))  // 200MB
+const uploadEpisodes = makeMulterFor('episodes', Number(process.env.UPLOAD_LIMIT_EPISODES || 1_500 * 1024 * 1024)) // ~1.5GB
+
+app.post('/api/upload/images', requireAuth, uploadImages.single('file'), (req, res) => {
+  const rel = `/cdn/images/${path.basename(req.file.path)}`
+  res.status(201).json({ path: rel, size: req.file.size, mimetype: req.file.mimetype })
+})
+app.post('/api/upload/clips', requireAuth, uploadClips.single('file'), (req, res) => {
+  const rel = `/cdn/clips/${path.basename(req.file.path)}`
+  res.status(201).json({ path: rel, size: req.file.size, mimetype: req.file.mimetype })
+})
+app.post('/api/upload/episodes', requireAuth, uploadEpisodes.single('file'), (req, res) => {
+  const rel = `/cdn/episodes/${path.basename(req.file.path)}`
+  res.status(201).json({ path: rel, size: req.file.size, mimetype: req.file.mimetype })
+})
 // Rate limiters
 const basicLimiter = rateLimit({ windowMs: 60_000, max: 300 })
 app.use(basicLimiter)

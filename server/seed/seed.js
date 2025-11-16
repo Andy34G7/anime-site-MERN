@@ -26,7 +26,7 @@ const anime = [
       { number: 2, title: 'My Name is Konohamaru!', lengthMin: 23 }
     ],
     score: 8.6,
-    coverImage: 'https://placehold.co/400x600?text=Naruto',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -40,7 +40,7 @@ const anime = [
       { number: 2, title: 'Enter the Great Swordsman! Pirate Hunter Roronoa Zoro!', lengthMin: 24 }
     ],
     score: 8.0,
-    coverImage: 'https://placehold.co/400x600?text=One+Piece',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -53,7 +53,7 @@ const anime = [
       { number: 1, title: 'To You, in 2000 Years: The Fall of Shiganshina, Pt. 1', lengthMin: 24 }
     ],
     score: 9.0,
-    coverImage: 'https://placehold.co/400x600?text=AOT',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -66,7 +66,7 @@ const anime = [
       { number: 1, title: 'Cruelty', lengthMin: 24 }
     ],
     score: 8.7,
-    coverImage: 'https://placehold.co/400x600?text=Kimetsu',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -79,7 +79,7 @@ const anime = [
       { number: 1, title: 'Fullmetal Alchemist', lengthMin: 24 }
     ],
     score: 9.1,
-    coverImage: 'https://placehold.co/400x600?text=FMAB',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -92,7 +92,7 @@ const anime = [
       { number: 1, title: 'Izuku Midoriya: Origin', lengthMin: 24 }
     ],
     score: 8.2,
-    coverImage: 'https://placehold.co/400x600?text=MHA',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -105,7 +105,7 @@ const anime = [
       { number: 1, title: 'Ryomen Sukuna', lengthMin: 24 }
     ],
     score: 8.6,
-    coverImage: 'https://placehold.co/400x600?text=JJK',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -118,7 +118,7 @@ const anime = [
       { number: 1, title: 'Rebirth', lengthMin: 23 }
     ],
     score: 8.7,
-    coverImage: 'https://placehold.co/400x600?text=Death+Note',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -131,7 +131,7 @@ const anime = [
       { number: 1, title: 'Departure × Friends', lengthMin: 23 }
     ],
     score: 8.9,
-    coverImage: 'https://placehold.co/400x600?text=HxH',
+    coverImage: '/cdn/images/poster-default.svg',
     createdAt: now()
   }
 ]
