@@ -84,8 +84,8 @@ export default function Home() {
             <h1 className="spotlight-title">{truncate(data.spotlight.title, 40)}</h1>
 
             <div className="spotlight-meta">
-              <span>🕒 {data.spotlight.duration}</span>
-              <span>📅 {data.spotlight.releaseDate}</span>
+              <span> {data.spotlight.duration}</span>
+              <span> {data.spotlight.releaseDate}</span>
             </div>
 
             <p className="spotlight-desc">{data.spotlight.description}</p>
