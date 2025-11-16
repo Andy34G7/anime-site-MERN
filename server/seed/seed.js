@@ -8,8 +8,8 @@ const __dirname = path.dirname(__filename)
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
-const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017'
-const dbName = process.env.DB_NAME || 'anime_dev'
+const uri = process.env.MONGODB_URI || 'mongodb+srv://aivillio34_db_user:zawarudo@anime-proj.txkrj4y.mongodb.net/animeDB?retryWrites=true&w=majority&appName=anime-proj'
+const dbName = process.env.DB_NAME || 'animeDB'
 
 const now = () => new Date()
 
