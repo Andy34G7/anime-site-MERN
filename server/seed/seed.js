@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { MongoClient, ObjectId } from 'mongodb'
+import bcrypt from 'bcrypt'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -191,6 +192,19 @@ async function seed() {
     } else {
       console.log(`${name} already has data (skip)`) 
     }
+  }
+
+  // Ensure demo user with password exists/updated
+  const demoPass = 'demo123'
+  const passwordHash = await bcrypt.hash(demoPass, 10)
+  const usersCol = db.collection('users')
+  const demo = await usersCol.findOne({ username: 'demo' })
+  if (!demo) {
+    await usersCol.insertOne({ username: 'demo', email: 'demo@example.com', passwordHash, avatar: '/avatars/demo.png', favorites: ['naruto'], clips: [], createdAt: now() })
+    console.log('Inserted demo user with default password')
+  } else if (!demo.passwordHash) {
+    await usersCol.updateOne({ _id: demo._id }, { $set: { passwordHash, email: demo.email || 'demo@example.com' } })
+    console.log('Updated demo user with password')
   }
 
   await client.close()
