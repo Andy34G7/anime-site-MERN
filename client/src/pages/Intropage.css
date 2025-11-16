@@ -1,0 +1,282 @@
+/* Intro Title Section */
+.intro-title-section {
+    text-align: left; /* Change from 'center' to 'left' */
+    padding: 10rem 2rem 0.5rem 0.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .intro-main-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #9B7EBD;
+    font-family: 'Roboto', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+  
+
+/* Intro Page Specific Search Section */
+.intro-search-section {
+    padding: 1rem 0.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+  }
+  
+  .intro-nav-right {
+    display: flex;
+    align-items: center;
+  }
+  
+  .intro-search-box {
+    display: flex;
+    align-items: center;
+    background: #D4BEE4;
+    padding: 6px 14px;
+    border-radius: 30px;
+    gap: 10px;
+    width: 640px;
+    border: 1px solid #D4BEE4;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .intro-search-box input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 13px;
+    font-family: 'Roboto', sans-serif;
+  }
+  
+  .intro-search-box input::placeholder {
+    color: #818181;
+  }
+  
+  .intro-icon {
+    opacity: 0.7;
+    font-size: 13px;
+  }
+
+/* Welcome Section */
+
+.greeting_for_about_is{
+    line-height: 1.7;
+    color: #D4BEE4;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+
+}
+.welcome-section {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .welcome-content {
+    text-align: left;
+  }
+  
+  .welcome-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #D4BEE4;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    text-align: justify;
+  }
+  
+ /* Comments Section - Horizontal Layout */
+.comments-section {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .comments-title {
+    font-size: 1.8rem;
+    color: #D4BEE4;
+    font-family: 'Roboto', sans-serif;
+    margin-bottom: 1.5rem;
+    text-align: left;
+  }
+  
+  .comments-horizontal {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+  }
+  
+  .comments-horizontal::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .comments-horizontal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .comments-horizontal::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+  
+  .comments-horizontal::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  .comment-card {
+    flex: 0 0 280px;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+  }
+  
+  .comment-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .comment-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #9B7EBD;
+  }
+  
+  .comment-user {
+    font-weight: 600;
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem;
+  }
+  
+  .comment-text {
+    color: #555;
+    line-height: 1.6;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  /* Section Divider */
+  .section-divider {
+    height: 6px;
+    background: linear-gradient(90deg, transparent, #9B7EBD, transparent);
+    margin: 1rem auto;
+    max-width: 1200px;
+  }
+  
+  /* Carousel Section - Updated to add some top spacing */
+  .carousel-section {
+    padding: 2rem;
+    margin-top: 1rem;
+  }
+  
+  /* Rest of your existing carousel styles remain the same */
+  .section-title {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #D4BEE4;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+  }
+  
+  .carousel-container {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  
+  .carousel-track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 1rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+  }
+  
+  .carousel-track::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .carousel-track::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .carousel-track::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+  
+  .carousel-track::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  .anime-card {
+    flex: 0 0 200px;
+    text-align: center;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .anime-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .anime-img {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  
+  .anime-title {
+    margin-top: 0.5rem;
+    font-weight: 600;
+    color: #D4BEE4;
+    font-size: 0.9rem;
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.2;
+  }
+  
+  .loading {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    padding: 2rem;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .welcome-section {
+      padding: 1.5rem;
+    }
+    
+    .welcome-text {
+      font-size: 1rem;
+      text-align: left;
+    }
+    
+    .carousel-container {
+      max-width: 100%;
+    }
+    
+    .anime-card {
+      flex: 0 0 150px;
+    }
+    
+    .anime-img {
+      height: 220px;
+    }
+  }

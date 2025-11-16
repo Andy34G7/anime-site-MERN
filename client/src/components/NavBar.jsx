@@ -13,10 +13,11 @@ export default function Navbar() {
           <ul className="menu">
             <li><Link to="/login">Log In</Link></li>
             <li><Link to="/">Home</Link></li>
+            <li><Link to="/about">About Us</Link></li>
             <li><Link to="/community">Community</Link></li>
             <li><Link to="/news">News</Link></li>
-            <li><Link to="/profile/username">Profile</Link></li>
             <li><Link to="/contact">Contact Us</Link></li>
+            <li><Link to="/profile/username">Profile</Link></li>
           </ul>
         </div>
 
@@ -30,4 +31,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}
+} 
