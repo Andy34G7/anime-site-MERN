@@ -10,9 +10,11 @@ import Clips from './pages/Clips'
 import Stream from './pages/Stream'
 import AnimeDetail from './pages/AnimeDetail'
 import NotFound from './pages/NotFound'
+import ResetPassword from './pages/ResetPassword.jsx'
 import Login from './pages/Login'
 import Contact from './pages/Contact.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext.jsx'
 
 const router = createBrowserRouter([
   {
@@ -28,6 +30,7 @@ const router = createBrowserRouter([
       { path: 'anime/:slug', element: <AnimeDetail /> },
       { path: 'Contact', element: <Contact /> },
       { path: 'login', element: <Login /> },
+      { path: 'reset', element: <ResetPassword /> },
       { path: '*', element: <NotFound /> },
     ],
   },
@@ -35,6 +38,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </React.StrictMode>
 )

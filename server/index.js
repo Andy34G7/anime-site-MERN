@@ -3,7 +3,11 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import rateLimit from 'express-rate-limit'
+import { body, validationResult } from 'express-validator'
+import crypto from 'node:crypto'
 import { getDb } from './data/db.js'
+import { sendPasswordResetEmail } from './utils/mailer.js'
 
 dotenv.config()
 
@@ -29,6 +33,10 @@ function authMiddleware(req, res, next) {
 }
 
 app.use(authMiddleware)
+// Rate limiters
+const basicLimiter = rateLimit({ windowMs: 60_000, max: 300 })
+app.use(basicLimiter)
+const authLimiter = rateLimit({ windowMs: 60_000, max: 10 })
 function requireAuth(req, res, next) {
   if (!req.user || !req.user.username) return res.status(401).json({ error: 'Unauthorized' })
   next()
@@ -94,53 +102,99 @@ app.get('/api/profile/:username', async (req, res, next) => {
       .toArray()
     const userClips = await db.collection('clips').find({ createdBy: user.username }).toArray()
 
-    res.json({ username: user.username, favorites: favs, clips: userClips })
+    res.json({ username: user.username, avatar: user.avatar, favorites: favs, clips: userClips })
   } catch (e) { next(e) }
 })
 
 // Register
-app.post('/api/auth/register', async (req, res, next) => {
-  try {
-    const { username, email, password } = req.body
-    if (!username || !email || !password) return res.status(400).json({ error: 'Missing fields' })
+app.post('/api/auth/register', authLimiter,
+  body('username').isString().isLength({ min: 3, max: 32 }).trim().escape(),
+  body('email').isEmail().normalizeEmail(),
+  body('password').isString().isLength({ min: 6, max: 128 }),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() })
 
-    const db = await getDb()
-    const exists = await db.collection('users').findOne({ $or: [{ username }, { email }] })
-    if (exists) return res.status(409).json({ error: 'User already exists' })
+      const { username, email, password } = req.body
 
-    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
-    const user = {
-      username,
-      email,
-      passwordHash,
-      avatar: '/avatars/default.png',
-      favorites: [],
-      createdAt: new Date()
-    }
+      const db = await getDb()
+      const exists = await db.collection('users').findOne({ $or: [{ username }, { email }] })
+      if (exists) return res.status(409).json({ error: 'User already exists' })
 
-    await db.collection('users').insertOne(user)
-    const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '7d' })
-    res.json({ token, user: { username: user.username, avatar: user.avatar } })
-  } catch (e) { next(e) }
-})
+      const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
+        const user = { username, email, passwordHash, avatar: '/avatars/default.svg', favorites: [], createdAt: new Date() }
+
+      await db.collection('users').insertOne(user)
+      const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '7d' })
+      res.json({ token, user: { username: user.username, avatar: user.avatar } })
+    } catch (e) { next(e) }
+  }
+)
 
 // Login
-app.post('/api/auth/login', async (req, res, next) => {
-  try {
-    const { usernameOrEmail, password } = req.body
-    if (!usernameOrEmail || !password) return res.status(400).json({ error: 'Missing fields' })
+app.post('/api/auth/login', authLimiter,
+  body('usernameOrEmail').isString().isLength({ min: 3 }).trim(),
+  body('password').isString().isLength({ min: 6 }),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() })
 
-    const db = await getDb()
-    const user = await db.collection('users').findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] })
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' })
+      const { usernameOrEmail, password } = req.body
 
-    const ok = await bcrypt.compare(password, user.passwordHash || '')
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
+      const db = await getDb()
+      const user = await db.collection('users').findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] })
+      if (!user) return res.status(401).json({ error: 'Invalid credentials' })
 
-    const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '7d' })
-    res.json({ token, user: { username: user.username, avatar: user.avatar, favorites: user.favorites || [] } })
-  } catch (e) { next(e) }
-})
+      const ok = await bcrypt.compare(password, user.passwordHash || '')
+      if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
+
+      const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '7d' })
+      res.json({ token, user: { username: user.username, avatar: user.avatar, favorites: user.favorites || [] } })
+    } catch (e) { next(e) }
+  }
+)
+
+// Password reset (dev stub)
+app.post('/api/auth/request-reset', authLimiter,
+  body('usernameOrEmail').isString().isLength({ min: 3 }).trim(),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() })
+      const { usernameOrEmail } = req.body
+      const db = await getDb()
+      const user = await db.collection('users').findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] })
+      if (!user) return res.status(200).json({ ok: true })
+      const token = crypto.randomUUID()
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+      await db.collection('passwordResets').insertOne({ username: user.username, token, expiresAt })
+      const result = await sendPasswordResetEmail(user.email, token)
+      // In dev (no SMTP), still return the token to ease testing
+      res.json(result.dev ? { ok: true, token } : { ok: true })
+    } catch (e) { next(e) }
+  }
+)
+
+app.post('/api/auth/reset', authLimiter,
+  body('token').isString().isLength({ min: 10 }),
+  body('newPassword').isString().isLength({ min: 6 }),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() })
+      const { token, newPassword } = req.body
+      const db = await getDb()
+      const rec = await db.collection('passwordResets').findOne({ token })
+      if (!rec || new Date(rec.expiresAt) < new Date()) return res.status(400).json({ error: 'Invalid or expired token' })
+      const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
+      await db.collection('users').updateOne({ username: rec.username }, { $set: { passwordHash } })
+      await db.collection('passwordResets').deleteOne({ token })
+      res.json({ ok: true })
+    } catch (e) { next(e) }
+  }
+)
 // Current User
 app.get('/api/me', async (req, res, next) => {
   try {
@@ -151,6 +205,23 @@ app.get('/api/me', async (req, res, next) => {
     res.json({ user })
   } catch (e) { next(e) }
 })
+// Update current profile
+app.put('/api/profile', requireAuth,
+  body('avatar').optional().isString().isLength({ min: 5, max: 500 }).trim(),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() })
+      const { avatar } = req.body
+      const db = await getDb()
+      const update = {}
+      if (avatar) update.avatar = avatar
+      if (Object.keys(update).length === 0) return res.status(400).json({ error: 'No fields to update' })
+      await db.collection('users').updateOne({ username: req.user.username }, { $set: update })
+      res.json({ ok: true })
+    } catch (e) { next(e) }
+  }
+)
 // Clips
 app.get('/api/clips', async (req, res, next) => {
   try {

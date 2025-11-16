@@ -140,7 +140,7 @@ const users = [
   {
     _id: new ObjectId(),
     username: 'demo',
-    avatar: '/avatars/demo.png',
+    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=demo',
     favorites: ['naruto'],
     clips: [],
     createdAt: now()
@@ -200,7 +200,7 @@ async function seed() {
   const usersCol = db.collection('users')
   const demo = await usersCol.findOne({ username: 'demo' })
   if (!demo) {
-    await usersCol.insertOne({ username: 'demo', email: 'demo@example.com', passwordHash, avatar: '/avatars/demo.png', favorites: ['naruto'], clips: [], createdAt: now() })
+    await usersCol.insertOne({ username: 'demo', email: 'demo@example.com', passwordHash, avatar: '/avatars/default.svg', favorites: ['naruto'], clips: [], createdAt: now() })
     console.log('Inserted demo user with default password')
   } else if (!demo.passwordHash) {
     await usersCol.updateOne({ _id: demo._id }, { $set: { passwordHash, email: demo.email || 'demo@example.com' } })

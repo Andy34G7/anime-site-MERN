@@ -10,6 +10,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showReset, setShowReset] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   const navigate = useNavigate()
 
   async function submit(e) {
@@ -17,6 +19,14 @@ const Login = () => {
     setError('')
     setLoading(true)
     try {
+      if (showReset) {
+        const usernameOrEmail = username || email
+        if (!usernameOrEmail) throw new Error('Enter username or email')
+        const res = await api.post('/auth/request-reset', { usernameOrEmail })
+        setResetSent(true)
+        setLoading(false)
+        return
+      }
       if (isRegister) {
         const res = await api.post('/auth/register', { username, email, password })
         const { token, user } = res.data
@@ -65,22 +75,35 @@ const Login = () => {
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label">PASSWORD</label>
-            <input value={password} onChange={e => setPassword(e.target.value)} type="password" className="form-input" />
-          </div>
+          {!showReset && (
+            <div className="form-group">
+              <label className="form-label">PASSWORD</label>
+              <input value={password} onChange={e => setPassword(e.target.value)} type="password" className="form-input" />
+            </div>
+          )}
 
           {error && <div className="error">{error}</div>}
+          {showReset && resetSent && <div className="success">If the account exists, a reset email has been sent.</div>}
 
           <button disabled={loading} type="submit" className="login-button">
-            {loading ? 'Please wait…' : isRegister ? 'Create account' : 'Login'}
+            {loading ? 'Please wait…' : showReset ? 'Send reset link' : isRegister ? 'Create account' : 'Login'}
           </button>
 
           <div style={{ marginTop: 12 }}>
-            <button type="button" className="login-toggle" onClick={() => setIsRegister(s => !s)}>
-              {isRegister ? 'Have an account? Login' : "Don't have an account? Register"}
-            </button>
+            {!showReset && (
+              <button type="button" className="login-toggle" onClick={() => setIsRegister(s => !s)}>
+                {isRegister ? 'Have an account? Login' : "Don't have an account? Register"}
+              </button>
+            )}
           </div>
+
+          {!isRegister && (
+            <div style={{ marginTop: 8 }}>
+              <button type="button" className="login-toggle" onClick={() => { setShowReset(s => !s); setResetSent(false) }}>
+                {showReset ? 'Back to login' : 'Forgot password?'}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
