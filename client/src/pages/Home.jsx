@@ -147,7 +147,10 @@ export default function Home() {
 
       {/* ---------------- Featured ---------------- */}
       <section className="carousel-section">
-        <h2 className="section-title">Featured Anime</h2>
+        <div className="carousel-head">
+          <h2 className="section-title">Featured Anime</h2>
+          <p className="carousel-description">Editor-picked series refreshed daily for quick binge inspiration.</p>
+        </div>
         <div className="carousel-container">
           {data.featured.map((a) => (
             <Link key={a.slug} to={`/anime/${a.slug}`} className="anime-card">
@@ -160,7 +163,10 @@ export default function Home() {
 
       {/* ---------------- Trending ---------------- */}
       <section className="carousel-section">
-        <h2 className="section-title">Trending Now</h2>
+        <div className="carousel-head">
+          <h2 className="section-title">Trending Now</h2>
+          <p className="carousel-description">See what the community is streaming the most this week.</p>
+        </div>
         <div className="carousel-container">
           {data.trending.map((a) => (
             <Link key={a.slug} to={`/anime/${a.slug}`} className="anime-card">

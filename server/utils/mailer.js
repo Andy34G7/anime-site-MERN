@@ -37,3 +37,35 @@ export async function sendPasswordResetEmail(to, token) {
   await transporter.sendMail({ from, to, subject: 'Password Reset', text, html })
   return { dev: false }
 }
+
+export async function sendContactEmail(payload) {
+  const transporter = getTransport()
+  const from = process.env.EMAIL_FROM || 'no-reply@animebloom.local'
+  const to = process.env.CONTACT_INBOX || process.env.EMAIL_FROM || 'support@animebloom.local'
+  const fullName = `${payload.firstName} ${payload.lastName || ''}`.trim()
+  const subject = `New contact form submission from ${fullName}`
+
+  const textLines = [
+    `Name: ${fullName}`,
+    `Email: ${payload.email}`,
+    payload.phone ? `Phone: ${payload.phone}` : null,
+    '',
+    payload.message
+  ].filter(Boolean)
+  const text = textLines.join('\n')
+  const html = `
+    <p><strong>Name:</strong> ${fullName}</p>
+    <p><strong>Email:</strong> ${payload.email}</p>
+    ${payload.phone ? `<p><strong>Phone:</strong> ${payload.phone}</p>` : ''}
+    <p><strong>Message:</strong></p>
+    <p>${payload.message.replace(/\n/g, '<br/>')}</p>
+  `
+
+  if (!transporter) {
+    console.log('[DEV contact form]', { to, subject, text })
+    return { dev: true }
+  }
+
+  await transporter.sendMail({ from, to, replyTo: payload.email, subject, text, html })
+  return { dev: false }
+}

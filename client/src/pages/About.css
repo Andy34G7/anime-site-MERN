@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
+.about-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.about-hero {
+  text-align: left;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.about-card {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.about-card h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.about-roadmap {
+  text-align: left;
+}
+
+.about-roadmap ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: var(--text-muted);
+}
+
+.about-roadmap li {
+  line-height: 1.6;
+}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import Hls from 'hls.js'
 import api, { toMediaUrl } from '../services/api'
+import './Stream.css'
 
 export default function Stream() {
   const { animeId } = useParams()
@@ -21,8 +22,6 @@ export default function Stream() {
       pollRef.current = null
     }
   }
-  const pageStyle = { maxWidth: 1000, margin: '0 auto', padding: '32px 24px', color: '#f6f0ff' }
-  const panelStyle = { background: 'rgba(12, 6, 24, 0.75)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20 }
   const requestedEpisode = useMemo(() => {
     const value = Number(searchParams.get('episode'))
     return Number.isFinite(value) && value > 0 ? value : null
@@ -167,52 +166,80 @@ export default function Stream() {
   }
 
   return (
-    <main style={pageStyle}>
-      <h1 style={{ fontSize: 32, marginBottom: 12 }}>Stream</h1>
-      {loading && <div>Loading…</div>}
-      {error && <div style={{ color: 'crimson' }}>{error}</div>}
+    <main className="page-shell stream-page">
+      <div className="stream-page-header">
+        <h1 className="section-heading">Stream</h1>
+        <p className="muted-text">Choose an episode and start watching instantly.</p>
+      </div>
+      {loading && <div className="muted-text">Loading…</div>}
+      {error && <div className="form-error">{error}</div>}
       {data && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <h2 style={{ margin: 0 }}>{data.anime.title}</h2>
-            <p style={{ opacity: 0.85 }}>{data.anime.synopsis}</p>
-          </div>
-          <div style={{ display:'flex', gap:24, flexWrap: 'wrap' }}>
-            <div style={{ ...panelStyle, flex: '1 1 260px' }}>
-              <h3>Episodes</h3>
-              <ul style={{ listStyle:'none', padding:0 }}>
-                {(data.episodes || []).map(ep => (
-                  <li key={ep._id} style={{ marginBottom:8 }}>
-                    <button onClick={() => selectEpisode(ep)} style={{ cursor:'pointer', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.2)', padding:'8px 12px', borderRadius:10, width:'100%', textAlign:'left', color:'#f6f0ff' }}>
-                      Ep {ep.episodeNumber || '?'} — {ep.status}
-                      {ep.status === 'processing' && ' (transcoding…)'}
-                      {ep.status === 'failed' && ' (failed)'}
-                    </button>
-                  </li>
-                ))}
+        <>
+          <section className="glass-panel stream-hero">
+            <div className="stream-hero-text">
+              <span className="stream-meta">{(data.episodes || []).length} episodes available</span>
+              <h2>{data.anime.title}</h2>
+              <p className="muted-text">{data.anime.synopsis}</p>
+            </div>
+            {data.anime.coverImage && (
+              <img src={data.anime.coverImage} alt={data.anime.title} className="stream-hero-art" />
+            )}
+          </section>
+
+          <section className="stream-grid">
+            <div className="glass-panel stream-episodes">
+              <div className="stream-panel-header">
+                <h3>Episodes</h3>
+                <span className="muted-text">Tap to load a stream</span>
+              </div>
+              <ul className="episode-list">
+                {(data.episodes || []).map(ep => {
+                  const isActive = currentEp?._id === ep._id
+                  return (
+                    <li key={ep._id}>
+                      <button
+                        type="button"
+                        className={`episode-button${isActive ? ' is-active' : ''}`}
+                        onClick={() => selectEpisode(ep)}
+                      >
+                        <div>
+                          <strong>Episode {ep.episodeNumber || '?'}</strong>
+                          <span className="muted-text">{ep.status}</span>
+                        </div>
+                        {ep.status === 'processing' && <span className="episode-pill">Transcoding…</span>}
+                        {ep.status === 'failed' && <span className="episode-pill error">Failed</span>}
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
-            <div style={{ ...panelStyle, flex: '2 1 400px' }}>
-              <h3>Player</h3>
-              {!currentEp && <div>Select an episode to play.</div>}
+
+            <div className="glass-panel stream-player">
+              <div className="stream-panel-header">
+                <h3>Player</h3>
+                {currentEp && <span className="muted-text">Episode {currentEp.episodeNumber}</span>}
+              </div>
+              {!currentEp && <p className="muted-text">Select an episode to begin playback.</p>}
               {currentEp && (
-                <div>
-                  <div style={{ marginBottom:8 }}>Episode {currentEp.episodeNumber} — {currentEp.status}</div>
+                <div className="stream-player-body">
                   <video
                     id="hls-player"
                     ref={videoRef}
                     controls
-                    style={{ width:'100%', background:'#000', borderRadius:8 }}
+                    className="stream-video"
                     poster={currentEp.thumbnail || data.anime.coverImage}
                   />
-                  {epLoading && currentEp.status !== 'ready' && <div style={{ marginTop:8 }}>Waiting for transcoding… polling</div>}
-                  {currentEp.status === 'failed' && <div style={{ color:'crimson', marginTop:8 }}>Transcode failed.</div>}
-                  {playerError && <div style={{ color:'crimson', marginTop:8 }}>{playerError}</div>}
+                  <div className="player-status">
+                    {epLoading && currentEp.status !== 'ready' && <span>Waiting for transcoding…</span>}
+                    {currentEp.status === 'failed' && <span className="form-error">Transcode failed.</span>}
+                    {playerError && <span className="form-error">{playerError}</span>}
+                  </div>
                 </div>
               )}
             </div>
-          </div>
-        </div>
+          </section>
+        </>
       )}
     </main>
   )

@@ -8,7 +8,7 @@ import crypto from 'node:crypto'
 import { getDb } from './data/db.js'
 import path from 'node:path'
 import multer from 'multer'
-import { sendPasswordResetEmail } from './utils/mailer.js'
+import { sendPasswordResetEmail, sendContactEmail } from './utils/mailer.js'
 import helmet from 'helmet'
 import { requireAuth, requireRole } from './utils/rbac.js'
 import { transcodeEpisode } from './utils/transcode.js'
@@ -177,6 +177,23 @@ app.get('/api/home', async (req, res, next) => {
 app.get('/api/about', (req, res) => {
   res.json({ app: 'Anime Site', version: '1.0.0' })
 })
+
+app.post('/api/contact',
+  body('firstName').isString().trim().isLength({ min: 1, max: 80 }),
+  body('lastName').optional().isString().trim().isLength({ max: 80 }),
+  body('email').isEmail().normalizeEmail(),
+  body('phone').optional().isString().trim().isLength({ max: 40 }),
+  body('message').isString().trim().isLength({ min: 10, max: 2000 }),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() })
+
+      const result = await sendContactEmail(req.body)
+      res.json(result.dev ? { ok: true, dev: true } : { ok: true })
+    } catch (e) { next(e) }
+  }
+)
 // Stream page (episode list or stream metadata)
 // Stream metadata: anime + linked episodes
 app.get('/api/stream/:animeId', async (req, res, next) => {
