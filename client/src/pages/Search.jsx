@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import api from '../services/api'
+import api, { toMediaUrl } from '../services/api'
 
 export default function SearchPage() {
   const [params, setParams] = useSearchParams()
@@ -11,7 +11,11 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [page, setPage] = useState(pageParam)
-  const [limit] = useState(20)
+  const limit = 20
+
+  useEffect(() => {
+    setQ(qParam)
+  }, [qParam])
 
   useEffect(() => {
     if (!qParam) { setResults([]); return }
@@ -26,7 +30,12 @@ export default function SearchPage() {
 
   function submit(e) {
     e.preventDefault()
-    setParams({ q, page: '1' })
+    const next = q.trim()
+    if (!next) {
+      setParams({})
+      return
+    }
+    setParams({ q: next, page: '1' })
   }
 
   function next(delta) {
@@ -49,7 +58,7 @@ export default function SearchPage() {
           <li key={r.slug} style={{ border: '1px solid #ddd', padding: 12, borderRadius: 8 }}>
             <Link to={`/anime/${r.slug}`} style={{ fontWeight: 600 }}>{r.title}</Link>
             <div style={{ fontSize: 12, opacity: 0.8 }}>{(r.synopsis || '').slice(0, 140)}{(r.synopsis||'').length>140?'…':''}</div>
-            {r.coverImage && <img src={r.coverImage} alt={r.title} style={{ maxWidth: 160, marginTop: 8 }} />}
+            {r.coverImage && <img src={toMediaUrl(r.coverImage)} alt={r.title} style={{ maxWidth: 160, marginTop: 8 }} />}
           </li>
         ))}
       </ul>

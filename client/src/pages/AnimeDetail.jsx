@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import api from '../services/api'
+import { Link, useParams } from 'react-router-dom'
+import api, { toMediaUrl } from '../services/api'
 import './AnimeDetail.css'
 
 export default function AnimeDetail() {
@@ -12,7 +12,12 @@ export default function AnimeDetail() {
   useEffect(() => {
     let active = true
     api.get(`/anime/${encodeURIComponent(slug)}`)
-      .then(res => { if (active) { setAnime(res.data); setLoading(false) }})
+      .then(res => {
+        if (!active) return
+        const doc = res.data || {}
+        setAnime({ ...doc, coverImage: toMediaUrl(doc.coverImage) })
+        setLoading(false)
+      })
       .catch(err => { console.error(err); if (active) { setError('Not found or failed to load'); setLoading(false) }})
     return () => { active = false }
   }, [slug])
@@ -42,15 +47,26 @@ export default function AnimeDetail() {
           </div>
 
           <h3 className="section-label">EPISODES</h3>
+          {(anime.episodes || []).length === 0 && <p className="no-episodes">Episodes coming soon.</p>}
           <ul className="episode-list">
-            {(anime.episodes || []).map((ep, i) => (
-              <li key={i} className="episode-item">
-                <span className="ep-number">Ep {ep.number || i + 1}</span>
-                <span className="ep-title">{ep.title || 'Untitled'}</span>
-                <span className="ep-length">{ep.lengthMin || '?'} min</span>
-              </li>
-            ))}
+            {(anime.episodes || []).map((ep, i) => {
+              const epi = ep.number || ep.episodeNumber || i + 1
+              return (
+                <li key={`${epi}-${ep.title || i}`} className="episode-item">
+                  <Link className="episode-link" to={`/stream/${anime.slug || slug}?episode=${epi}`}>
+                    <span className="ep-number">Ep {epi}</span>
+                    <span className="ep-title">{ep.title || 'Untitled'}</span>
+                    <span className="ep-length">{ep.lengthMin || ep.duration || '?'} min</span>
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
+          {(anime.episodes || []).length > 0 && (
+            <div className="episode-cta">
+              <Link className="episode-cta-button" to={`/stream/${anime.slug || slug}`}>Open Player</Link>
+            </div>
+          )}
         </div>
       </div>
     </main>

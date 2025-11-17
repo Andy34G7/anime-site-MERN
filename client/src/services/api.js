@@ -1,6 +1,8 @@
 import axios from "axios";
 
 const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const apiOrigin = baseURL.replace(/\/api\/?$/, '')
+const cdnOrigin = (import.meta.env.VITE_CDN_URL || apiOrigin).replace(/\/$/, '')
 
 const api = axios.create({
   baseURL,
@@ -24,6 +26,16 @@ export function setAuthToken(token) {
     try { localStorage.removeItem('token') } catch {}
   }
   attachAuth()
+}
+
+export const API_BASE_URL = baseURL
+
+export function toMediaUrl(path) {
+  if (!path) return ''
+  if (/^https?:\/\//i.test(path)) return path
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  const origin = normalized.startsWith('/cdn/') ? cdnOrigin : apiOrigin
+  return `${origin}${normalized}`
 }
 
 export default api;

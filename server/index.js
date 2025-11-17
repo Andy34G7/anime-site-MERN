@@ -13,6 +13,7 @@ import helmet from 'helmet'
 import { requireAuth, requireRole } from './utils/rbac.js'
 import { transcodeEpisode } from './utils/transcode.js'
 import { ObjectId } from 'mongodb'
+import { fileURLToPath } from 'node:url'
 
 dotenv.config()
 
@@ -46,7 +47,8 @@ app.use(authMiddleware)
 
 // In-process transcode runner (no Redis). Fire-and-forget background job.
 // Local CDN: serve media files with cache headers
-const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'server', 'media')
+const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url))
+const MEDIA_ROOT = process.env.MEDIA_ROOT ? path.resolve(process.env.MEDIA_ROOT) : path.join(CURRENT_DIR, 'media')
 function setCdnHeaders(res, filePath) {
   const ext = (filePath || '').toLowerCase()
   if (ext.endsWith('.jpg') || ext.endsWith('.jpeg') || ext.endsWith('.png') || ext.endsWith('.gif') || ext.endsWith('.webp') || ext.endsWith('.svg')) {
@@ -150,7 +152,7 @@ function authLimiter(req, res, next) {
   try {
     const db = await getDb()
     await db.collection('anime').createIndex({ slug: 1 }, { unique: true })
-    await db.collection('anime').createIndex({ title: 'text', synopsis: 'text' })
+    await db.collection('anime').createIndex({ title: 'text', synopsis: 'text' }, { name: 'anime_text_idx' })
     await db.collection('communityPosts').createIndex({ createdAt: -1 })
     await db.collection('episodes').createIndex({ createdAt: -1 })
     console.log('Indexes ensured')

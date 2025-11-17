@@ -223,11 +223,14 @@
   }
   
   .anime-card {
-    flex: 0 0 200px;
-    text-align: center;
-    transition: transform 0.3s ease;
-    cursor: pointer;
-  }
+      flex: 0 0 200px;
+      text-align: center;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
   
   .anime-card:hover {
     transform: scale(1.05);

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import api from '../services/api';
-import './Intropage.css';
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import api, { toMediaUrl } from '../services/api'
+import './Intropage.css'
 
 import female1_profile from './female1_profile.jpg';
 import man1_profile from './man1_profile.jpg';
@@ -11,37 +12,40 @@ import man4_profile from './man4_profile.png';
 import man5_profile from './man5_profile.png';
 
 const Intropage = () => {
-  const [topAnime, setTopAnime] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const carouselRef = useRef(null);
+  const [topAnime, setTopAnime] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const carouselRef = useRef(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     let active = true;
-    const CACHE_KEY = 'topAnimeCache:server:v1';
+    const CACHE_KEY = 'topAnimeCache:server:v2';
     const MAX_AGE_MS = 10 * 60 * 1000;
 
+    const normalize = (list) => (list || []).map(item => ({ ...item, coverImage: toMediaUrl(item.coverImage) }))
+
     try {
-      const cached = sessionStorage.getItem(CACHE_KEY);
+      const cached = sessionStorage.getItem(CACHE_KEY)
       if (cached) {
-        const { ts, data } = JSON.parse(cached);
+        const { ts, data } = JSON.parse(cached)
         if (Date.now() - ts < MAX_AGE_MS) {
-          setTopAnime(data);
-          setLoading(false);
+          setTopAnime(normalize(data))
+          setLoading(false)
         }
       }
     } catch {}
 
     const fetchTopAnime = async () => {
       try {
-        const response = await api.get('/home');
-        const list = response.data?.trending || [];
+        const response = await api.get('/home')
+        const list = normalize(response.data?.trending || [])
         if (active) {
           setTopAnime(list);
           setLoading(false);
         }
         try {
-          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: list }));
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: list }))
         } catch {}
       } catch (error) {
         console.error('Error fetching top anime:', error);
@@ -59,9 +63,11 @@ const Intropage = () => {
   };
 
   const handleSearch = (e) => {
-    e.preventDefault();
-    console.log('Searching for:', searchQuery);
-  };
+    e.preventDefault()
+    const query = searchQuery.trim()
+    if (!query) return
+    navigate(`/search?q=${encodeURIComponent(query)}`)
+  }
 
   return (
     <div className="intro-page">
@@ -205,7 +211,7 @@ const Intropage = () => {
           <div className="carousel-container">
             <div className="carousel-track" ref={carouselRef}>
               {topAnime.map((anime) => (
-                <div key={anime.slug} className="anime-card">
+                <Link key={anime.slug} className="anime-card" to={`/anime/${anime.slug}`}>
                   <img 
                     className="anime-img" 
                     src={anime.coverImage}
@@ -215,7 +221,7 @@ const Intropage = () => {
                   <div className="anime-title">
                     {truncateTitle(anime.title)}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

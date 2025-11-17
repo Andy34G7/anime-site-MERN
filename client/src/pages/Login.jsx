@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import './Login.css';
-import api, { setAuthToken } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react'
+import './Login.css'
+import api from '../services/api'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -13,6 +14,7 @@ const Login = () => {
   const [showReset, setShowReset] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   async function submit(e) {
     e.preventDefault()
@@ -30,20 +32,19 @@ const Login = () => {
       if (isRegister) {
         const res = await api.post('/auth/register', { username, email, password })
         const { token, user } = res.data
-        setAuthToken(token)
-        try { localStorage.setItem('username', user.username) } catch {}
+        login(token, user)
         navigate(`/profile/${user.username}`)
       } else {
         // login can accept username or email
         const res = await api.post('/auth/login', { usernameOrEmail: username || email, password })
         const { token, user } = res.data
-        setAuthToken(token)
-        try { localStorage.setItem('username', user.username) } catch {}
+        login(token, user)
         navigate(`/profile/${user.username}`)
       }
     } catch (err) {
       console.error(err)
       setError(err?.response?.data?.error || 'Failed to authenticate')
+    } finally {
       setLoading(false)
     }
   }

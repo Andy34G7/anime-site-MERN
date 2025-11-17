@@ -17,6 +17,12 @@ function cryptoRandom() {
 }
 
 const now = () => new Date()
+const mediaPaths = {
+  naruto: '/cdn/images/demo-naruto.jpg',
+  'one-piece': '/cdn/images/demo-onepiece.jpg',
+  'demon-slayer': '/cdn/images/demo-demonslayer.jpg'
+}
+const demoEpisodeFile = path.join(__dirname, '..', 'media', 'episodes', 'demo-episode-1.mp4')
 
 const anime = [
   {
@@ -30,7 +36,7 @@ const anime = [
       { number: 2, title: 'My Name is Konohamaru!', lengthMin: 23 }
     ],
     score: 8.6,
-    coverImage: '/cdn/images/poster-default.svg',
+    coverImage: mediaPaths['naruto'] || '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -44,7 +50,7 @@ const anime = [
       { number: 2, title: 'Enter the Great Swordsman! Pirate Hunter Roronoa Zoro!', lengthMin: 24 }
     ],
     score: 8.0,
-    coverImage: '/cdn/images/poster-default.svg',
+    coverImage: mediaPaths['one-piece'] || '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -70,7 +76,7 @@ const anime = [
       { number: 1, title: 'Cruelty', lengthMin: 24 }
     ],
     score: 8.7,
-    coverImage: '/cdn/images/poster-default.svg',
+    coverImage: mediaPaths['demon-slayer'] || '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -96,7 +102,7 @@ const anime = [
       { number: 1, title: 'Izuku Midoriya: Origin', lengthMin: 24 }
     ],
     score: 8.2,
-    coverImage: '/cdn/images/poster-default.svg',
+    coverImage: mediaPaths['naruto'] || '/cdn/images/poster-default.svg',
     createdAt: now()
   },
   {
@@ -135,7 +141,7 @@ const anime = [
       { number: 1, title: 'Departure × Friends', lengthMin: 23 }
     ],
     score: 8.9,
-    coverImage: '/cdn/images/poster-default.svg',
+    coverImage: mediaPaths['naruto'] || '/cdn/images/poster-default.svg',
     createdAt: now()
   }
 ]
@@ -196,7 +202,26 @@ const clips = [
     startSec: 30,
     endSec: 50,
     createdBy: 'demo',
-    createdAt: now()
+    createdAt: now(),
+    publicPath: '/cdn/clips/demo-clip-1.mp4',
+    thumbnail: mediaPaths['naruto'] || '/cdn/images/poster-default.svg'
+  }
+]
+
+const episodeDocs = [
+  {
+    animeSlug: 'naruto',
+    episodeNumber: 1,
+    title: 'Training Day',
+    status: 'ready',
+    publicPath: '/cdn/episodes/demo-episode-1.mp4',
+    hlsPath: null,
+    filePath: demoEpisodeFile,
+    thumbnail: mediaPaths['naruto'] || '/cdn/images/poster-default.svg',
+    variants: ['mp4'],
+    createdBy: 'admin',
+    createdAt: now(),
+    updatedAt: now()
   }
 ]
 
@@ -210,7 +235,8 @@ async function seed() {
     { name: 'anime', data: anime },
     { name: 'users', data: users },
     { name: 'communityPosts', data: communityPosts },
-    { name: 'clips', data: clips }
+    { name: 'clips', data: clips },
+    { name: 'episodes', data: episodeDocs }
   ]
 
   for (const { name, data } of collections) {
@@ -222,6 +248,39 @@ async function seed() {
     } else {
       console.log(`${name} already has data (skip)`) 
     }
+  }
+
+  const animeCol = db.collection('anime')
+  for (const [slug, coverImage] of Object.entries(mediaPaths)) {
+    await animeCol.updateOne({ slug }, { $set: { coverImage } })
+  }
+
+  await db.collection('clips').updateOne(
+    { animeSlug: 'naruto', createdBy: 'demo' },
+    { $set: { publicPath: '/cdn/clips/demo-clip-1.mp4', thumbnail: mediaPaths['naruto'] || '/cdn/images/poster-default.svg' } },
+    { upsert: true }
+  )
+
+  const episodesCol = db.collection('episodes')
+  for (const doc of episodeDocs) {
+    await episodesCol.updateOne(
+      { animeSlug: doc.animeSlug, episodeNumber: doc.episodeNumber },
+      {
+        $set: {
+          status: doc.status,
+          publicPath: doc.publicPath,
+          hlsPath: doc.hlsPath,
+          thumbnail: doc.thumbnail,
+          variants: doc.variants,
+          filePath: doc.filePath,
+          title: doc.title,
+          createdBy: doc.createdBy,
+          updatedAt: now()
+        },
+        $setOnInsert: { createdAt: doc.createdAt }
+      },
+      { upsert: true }
+    )
   }
 
   // Ensure demo user with password exists/updated

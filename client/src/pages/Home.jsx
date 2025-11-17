@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../services/api";
+import api, { toMediaUrl } from "../services/api";
 import "./Home.css";
 
 /* Truncate long anime titles */
@@ -22,8 +22,18 @@ export default function Home() {
   useEffect(() => {
     let mounted = true;
 
-    const CACHE_KEY = "homeCache:server:v1";
+    const CACHE_KEY = "homeCache:server:v2";
     const MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
+
+    const normalizePayload = (payload) => {
+      if (!payload) return payload;
+      return {
+        ...payload,
+        spotlight: payload.spotlight ? { ...payload.spotlight, banner: toMediaUrl(payload.spotlight.banner) } : null,
+        featured: (payload.featured || []).map((a) => ({ ...a, coverImage: toMediaUrl(a.coverImage) })),
+        trending: (payload.trending || []).map((a) => ({ ...a, coverImage: toMediaUrl(a.coverImage) }))
+      }
+    }
 
     // Try cache first for instant paint
     try {
@@ -31,7 +41,7 @@ export default function Home() {
       if (cached) {
         const { ts, payload } = JSON.parse(cached);
         if (Date.now() - ts < MAX_AGE_MS) {
-          setData(payload);
+          setData(normalizePayload(payload));
           setLoading(false);
         }
       }
@@ -58,7 +68,7 @@ export default function Home() {
             ? {
                 title: spotlightDetail?.title || spotlightDoc.title,
                 slug: spotlightDoc.slug,
-                banner: spotlightDetail?.coverImage || spotlightDoc.coverImage,
+                banner: toMediaUrl(spotlightDetail?.coverImage || spotlightDoc.coverImage),
                 description: spotlightDetail?.synopsis || "",
                 duration: (spotlightDetail?.episodes?.[0]?.lengthMin
                   ? `${spotlightDetail.episodes[0].lengthMin} min`
@@ -69,12 +79,12 @@ export default function Home() {
           featured: featured.map((a) => ({
             title: a.title,
             slug: a.slug,
-            coverImage: a.coverImage
+            coverImage: toMediaUrl(a.coverImage)
           })),
           trending: trending.map((a) => ({
             title: a.title,
             slug: a.slug,
-            coverImage: a.coverImage
+            coverImage: toMediaUrl(a.coverImage)
           })),
           comments: []
         };
