@@ -11,7 +11,6 @@ export default function Navbar() {
     { to: "/", label: "Home" },
     { to: "/about", label: "About Us" },
     { to: "/community", label: "Community" },
-    { to: "/news", label: "News" },
     { to: "/contact", label: "Contact" },
     { to: profileHref, label: "Profile" }
   ];

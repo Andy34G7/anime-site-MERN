@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import Home from './pages/Home'
 import Intropage from './pages/Intropage' // ← ADD THIS IMPORT
+import About from './pages/About.jsx'
 import Community from './pages/Community'
 import Profile from './pages/Profile'
 import Clips from './pages/Clips'
@@ -25,7 +26,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <Home /> },
-      { path: 'about', element: <Intropage /> }, // ← CHANGE About to Intropage
+      { path: 'about', element: <About /> },
       { path: 'community', element: <Community /> },
       { path: 'clips', element: <Clips /> },
       { path: 'profile/:username', element: <Profile /> },
