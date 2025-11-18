@@ -141,15 +141,22 @@
 .carousel-container {
   display: flex;
   gap: 1rem;
-  overflow-x: auto;
   padding-bottom: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.carousel-container::-webkit-scrollbar {
-  display: none;
+@media (max-width: 768px) {
+  .carousel-container {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .carousel-container::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* ⭐ Simplified bordered cards */
+/* Simplified bordered cards */
 .home-container .anime-card {
   min-width: 190px;
   max-width: 190px;

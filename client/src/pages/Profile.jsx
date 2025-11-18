@@ -42,9 +42,9 @@ export default function Profile() {
   }
 
   return (
-    <main className="profile-page">
+    <main className="page-shell profile-page">
       <div className="profile-wrapper">
-        <h1 className="profile-title">PROFILE</h1>
+        <h1 className="profile-title">Profile</h1>
 
         {currentUser && currentUser === username && (
           <div style={{ marginBottom: 12 }}>
@@ -56,7 +56,7 @@ export default function Profile() {
         {error && <div className="error">{error}</div>}
 
         {data && (
-          <div className="profile-card">
+          <div className="glass-panel profile-card">
 
             {/* LEFT SIDE */}
             <div className="profile-left">
