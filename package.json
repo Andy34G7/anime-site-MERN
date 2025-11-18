@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev:cdn": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\" \"npm --prefix server run cdn\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

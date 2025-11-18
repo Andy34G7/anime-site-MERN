@@ -1,0 +1,133 @@
+.stream-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.stream-page-header {
+  text-align: left;
+}
+
+.stream-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(200px, 1.2fr);
+  gap: 2rem;
+  align-items: center;
+}
+
+.stream-hero-text h2 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: 0.75rem;
+}
+
+.stream-hero-art {
+  width: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  max-height: 280px;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.45);
+}
+
+.stream-meta {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.stream-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.4fr);
+  gap: 1.5rem;
+}
+
+.stream-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+}
+
+.episode-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.episode-button {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: inherit;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.episode-button strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.episode-button:hover {
+  border-color: var(--accent);
+}
+
+.episode-button.is-active {
+  border-color: var(--accent-secondary);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.episode-pill {
+  border-radius: 999px;
+  padding: 0.2rem 0.85rem;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.8rem;
+}
+
+.episode-pill.error {
+  background: rgba(255, 99, 132, 0.2);
+}
+
+.stream-player {
+  min-height: 100%;
+}
+
+.stream-player-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stream-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #040305;
+}
+
+.player-status {
+  min-height: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 960px) {
+  .stream-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stream-hero {
+    grid-template-columns: 1fr;
+  }
+}

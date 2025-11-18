@@ -1,35 +1,97 @@
-import { useState, useEffect, useRef } from 'react';
-import api from '../services/api';
-import './Intropage.css';
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import api, { toMediaUrl } from '../services/api'
+import './Intropage.css'
 
-import female1_profile from './female1_profile.jpg';
-import man1_profile from './man1_profile.jpg';
-import female2_profile from './female2_profile.jpg';
-import man2_profile from './man2_profile.jpg';
-import man3_profile from './man3_profile.png';
-import man4_profile from './man4_profile.png';
-import man5_profile from './man5_profile.png';
+const COMMENT_CARDS = [
+  {
+    handle: '@MysticMangaFox',
+    initials: 'MF',
+    color: '#f472b6',
+    text: "The interface is so cute?? I'm obsessed. And thank you for having both subs AND dubs for everything. My little sister can finally watch with me without getting lost!"
+  },
+  {
+    handle: '@StrawHatVoyager',
+    initials: 'SV',
+    color: '#fb7185',
+    text: 'This platform blows me away with its pacing and animation. Every fight looks like a full-budget movie scene!'
+  },
+  {
+    handle: '@MechaMuse33',
+    initials: 'MM',
+    color: '#c084fc',
+    text: 'Absolutely stunning visuals. Every battle feels like a painting in motion. Also, Tanjiro is the sweetest protagonist ever.'
+  },
+  {
+    handle: '@OtakuOverload',
+    initials: 'OO',
+    color: '#818cf8',
+    text: "I came for the new releases, stayed for the MASSIVE library. Classics, new stuff, obscure gems—I'm in anime heaven."
+  },
+  {
+    handle: '@SakuraStorm',
+    initials: 'SS',
+    color: '#38bdf8',
+    text: 'The visuals here are unreal. The colors literally glow off the screen. No ads, no lag—just anime bliss.'
+  },
+  {
+    handle: '@MechaMuse',
+    initials: 'MM',
+    color: '#34d399',
+    text: 'This site recommended mech shows I’ve never even heard of—and they were all bangers. Amazing algorithm!'
+  },
+  {
+    handle: '@ChibiGoblin',
+    initials: 'CG',
+    color: '#facc15',
+    text: 'Everything is so easy to find! Clean layout, fast loading, and the dub options help my little brother so much.'
+  }
+]
 
 const Intropage = () => {
-  const [topAnime, setTopAnime] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const carouselRef = useRef(null);
+  const [topAnime, setTopAnime] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const carouselRef = useRef(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
+    let active = true;
+    const CACHE_KEY = 'topAnimeCache:server:v2';
+    const MAX_AGE_MS = 10 * 60 * 1000;
+
+    const normalize = (list) => (list || []).map(item => ({ ...item, coverImage: toMediaUrl(item.coverImage) }))
+
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY)
+      if (cached) {
+        const { ts, data } = JSON.parse(cached)
+        if (Date.now() - ts < MAX_AGE_MS) {
+          setTopAnime(normalize(data))
+          setLoading(false)
+        }
+      }
+    } catch {}
+
     const fetchTopAnime = async () => {
       try {
-        setLoading(true);
-        const response = await api.get('/top/anime?limit=15');
-        setTopAnime(response.data.data);
+        const response = await api.get('/home')
+        const list = normalize(response.data?.trending || [])
+        if (active) {
+          setTopAnime(list);
+          setLoading(false);
+        }
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: list }))
+        } catch {}
       } catch (error) {
         console.error('Error fetching top anime:', error);
-      } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     
     fetchTopAnime();
+    return () => { active = false };
   }, []);
 
   const truncateTitle = (title, maxLength = 22) => {
@@ -38,9 +100,11 @@ const Intropage = () => {
   };
 
   const handleSearch = (e) => {
-    e.preventDefault();
-    console.log('Searching for:', searchQuery);
-  };
+    e.preventDefault()
+    const query = searchQuery.trim()
+    if (!query) return
+    navigate(`/search?q=${encodeURIComponent(query)}`)
+  }
 
   return (
     <div className="intro-page">
@@ -88,86 +152,17 @@ const Intropage = () => {
       <section className="comments-section">
         <h2 className="comments-title">Top Comments</h2>
         <div className="comments-horizontal">
-
-          {/* Comment 1 */}
-          <div className="comment-card">
-            <div className="comment-header">
-              <img src={female1_profile} alt="Profile" className="comment-avatar" />
-              <div className="comment-user">@MysticMangaFox</div>
+          {COMMENT_CARDS.map((comment) => (
+            <div key={comment.handle} className="comment-card">
+              <div className="comment-header">
+                <div className="comment-avatar" style={{ background: comment.color }} aria-hidden="true">
+                  {comment.initials}
+                </div>
+                <div className="comment-user">{comment.handle}</div>
+              </div>
+              <p className="comment-text">{comment.text}</p>
             </div>
-            <p className="comment-text">
-              The interface is so cute?? I'm obsessed. And thank you for having both subs AND dubs for everything. 
-              My little sister can finally watch with me without getting lost!
-            </p>
-          </div>
-
-          {/* Comment 2 */}
-          <div className="comment-card">
-            <div className="comment-header">
-              <img src={man1_profile} alt="Profile" className="comment-avatar" />
-              <div className="comment-user">@StrawHatVoyager</div>
-            </div>
-            <p className="comment-text">
-              This platform blows me away with its pacing and animation. Every fight looks like a full-budget movie scene!
-            </p>
-          </div>
-
-          {/* Comment 3 */}
-          <div className="comment-card">
-            <div className="comment-header">
-              <img src={female2_profile} alt="Profile" className="comment-avatar" />
-              <div className="comment-user">@MechaMuse33</div>
-            </div>
-            <p className="comment-text">
-              Absolutely stunning visuals. Every battle feels like a painting in motion. 
-              Also, Tanjiro is the sweetest protagonist ever.
-            </p>
-          </div>
-
-          {/* Comment 4 */}
-          <div className="comment-card">
-            <div className="comment-header">
-              <img src={man2_profile} alt="Profile" className="comment-avatar" />
-              <div className="comment-user">@OtakuOverload</div>
-            </div>
-            <p className="comment-text">
-              I came for the new releases, stayed for the MASSIVE library. Classics, new stuff, obscure gems—I'm in anime heaven.
-            </p>
-          </div>
-
-          {/* Comment 5 */}
-          <div className="comment-card">
-            <div className="comment-header">
-              <img src={man3_profile} alt="Profile" className="comment-avatar" />
-              <div className="comment-user">@SakuraStorm</div>
-            </div>
-            <p className="comment-text">
-              The visuals here are unreal. The colors literally glow off the screen. No ads, no lag—just anime bliss.
-            </p>
-          </div>
-
-          {/* Comment 6 */}
-          <div className="comment-card">
-            <div className="comment-header">
-              <img src={man4_profile} alt="Profile" className="comment-avatar" />
-              <div className="comment-user">@MechaMuse</div>
-            </div>
-            <p className="comment-text">
-              This site recommended mech shows I’ve never even heard of—and they were all bangers. Amazing algorithm!
-            </p>
-          </div>
-
-          {/* Comment 7 */}
-          <div className="comment-card">
-            <div className="comment-header">
-              <img src={man5_profile} alt="Profile" className="comment-avatar" />
-              <div className="comment-user">@ChibiGoblin</div>
-            </div>
-            <p className="comment-text">
-              Everything is so easy to find! Clean layout, fast loading, and the dub options help my little brother so much.
-            </p>
-          </div>
-
+          ))}
         </div>
       </section>
 
@@ -184,16 +179,17 @@ const Intropage = () => {
           <div className="carousel-container">
             <div className="carousel-track" ref={carouselRef}>
               {topAnime.map((anime) => (
-                <div key={anime.mal_id} className="anime-card">
+                <Link key={anime.slug} className="anime-card" to={`/anime/${anime.slug}`}>
                   <img 
                     className="anime-img" 
-                    src={anime.images.jpg.large_image_url} 
-                    alt={anime.title} 
+                    src={anime.coverImage}
+                    alt={anime.title}
+                    loading="lazy"
                   />
                   <div className="anime-title">
-                    {truncateTitle(anime.title.english || anime.title)}
+                    {truncateTitle(anime.title)}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
